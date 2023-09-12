@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "TuskerGrotesk";   /*Can be any text*/
+  src: local("TuskerGrotesk"),
+    url("/fonts/TuskerGrotesk-2600Semibold.ttf") format("truetype");
+}
+
+body {
+  min-height: 100vh;
+  position: relative;
+}
+
+*, body {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.long-title {
+  font-family: 'TuskerGrotesk';
+}

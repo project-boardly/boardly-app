@@ -10,7 +10,7 @@ function createSiweMessage (address: string) {
   const message = new SiweMessage({
     domain,
     address,
-    statement: 'Login to Family',
+    statement: 'Login to museboard',
     uri: origin + '/',
     nonce: generateNonce(),
     version: '1',

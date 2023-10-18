@@ -3,6 +3,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
+import { ToastProvider } from 'react-toast-notifications';
 import NiceModal from '@ebay/nice-modal-react';
 
 import { initializeApp } from "firebase/app";
@@ -36,11 +37,13 @@ export const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <NiceModal.Provider>
-      <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools initialIsOpen={true} />
+    <QueryClientProvider client={queryClient}>
+      <NiceModal.Provider>
+        <ToastProvider placement='bottom-right'>
+        <ReactQueryDevtools initialIsOpen={false} />
         <App />
-      </QueryClientProvider>
-    </NiceModal.Provider>
+        </ToastProvider>
+      </NiceModal.Provider>
+    </QueryClientProvider>
   </React.StrictMode>
 )

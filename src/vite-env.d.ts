@@ -9,6 +9,7 @@ interface Ethereum {
 
 declare interface Window {
   ethereum?: Eip1193Provider
+  lukso?: Eip1193Provider
 }
 
 declare const __DEV__: boolean

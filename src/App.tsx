@@ -4,7 +4,7 @@ import Web3Container from './Web3Container';
 import Router from './Router';
 // import AuthModal from './modals/AuthModal';
 
-// NiceModal.register('family-auth-modal', AuthModal);
+// NiceModal.register('museboard-auth', AuthModal);
 
 function App() {
   return (

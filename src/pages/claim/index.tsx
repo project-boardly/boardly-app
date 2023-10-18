@@ -1,4 +1,4 @@
-import { Button } from "../Header";
+import { Button } from "../../common/buttons";
 
 function Input({ placeholder, ...props }: { placeholder: string }) {
   return (

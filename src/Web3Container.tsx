@@ -13,9 +13,9 @@ interface ReactChildren {
 
 export default function Web3Container ({ children } : ReactChildren) {
   useEffect(() => {
-    const connectedWallet = localStorage.getItem('family:connected:wallet');
+    const connectedWallet = localStorage.getItem('museboard:connected:wallet');
 
-    connectedWallet && metaMask.connectEagerly()
+    connectedWallet && metaMask?.connectEagerly()
     reader.activate().then(() => console.log('Reader Connected'));
   }, []);
 
@@ -23,7 +23,7 @@ export default function Web3Container ({ children } : ReactChildren) {
     onAuthStateChanged(getAuth(), (user) => {
       if (user) { return; }
 
-      localStorage.clearItem('family:connected:wallet');
+      localStorage.removeItem('museboard:connected:wallet');
     });
   }, []);
 

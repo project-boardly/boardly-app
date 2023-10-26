@@ -38,12 +38,12 @@ export const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
+    <ToastProvider placement='bottom-right'>
       <NiceModal.Provider>
-        <ToastProvider placement='bottom-right'>
         <ReactQueryDevtools initialIsOpen={false} />
         <App />
-        </ToastProvider>
       </NiceModal.Provider>
+      </ToastProvider>
     </QueryClientProvider>
   </React.StrictMode>
 )

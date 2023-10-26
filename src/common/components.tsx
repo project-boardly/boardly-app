@@ -1,3 +1,5 @@
+
+import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
 import { UseQueryResult } from "@tanstack/react-query";
 
 export function ShortAddress ({ address }: { address: string }) {
@@ -20,4 +22,17 @@ export function QueryResultView ({ query, element }: QueryResultViewType) {
   }
 
   return <>{element(data)}</>;
+}
+
+function copy (text: string) {
+  navigator.clipboard.writeText(text)
+}
+
+export function Address({ address }: { address: string }) {
+  return (
+      <p>
+        <span className="pr-2">{address.substring(0, 5)}...{address.substring(address.length - 5)}</span>
+        <button className="inline" onClick={() => copy(address)}><ClipboardDocumentListIcon className="h-5 w-5"/></button>
+      </p>
+  );
 }

@@ -1,125 +1,132 @@
-import { useEffect, useState } from "react";
-import safeGet from "lodash/get";
 import { Link } from "react-router-dom";
-
-import addIcon from "../addIcon.svg";
 import { useQuery } from "@tanstack/react-query";
-
-const IPFS_GATEWAY = "https://2eff.lukso.dev/ipfs/";
-interface NFTCardProps {
-  address: string;
-  tokenId: string;
-  chain?: string;
-  classes?: string;
-}
-
-function extractTitle(description: string) {
-  const _title = (description.match(/^\[.*\]/g) || [])[0] || "";
-  const _desc = description.replace(_title, "").trimStart();
-
-  return { title: _title.replace(/[[\]]/g, ""), description: _desc };
-}
+import { queryClient } from "../main";
+import { useCollection } from "../hooks/useCollection";
 
 export default function NFTCard({
-  address,
+  chain,
+  collection,
   tokenId,
-  classes,
-}: NFTCardProps) {
-  const [image, setImage] = useState<string>("");
-  const [alt, setAlt] = useState<string>("");
-  const [padding] = useState<number>(Math.random() * 150);
-  const [aspect, setAspect] = useState<string|null>(null);
-  const token = useQuery(['token:data', address, tokenId], { queryFn: () => console.log('try to fetch'), staleTime: 60 * 5 * 1000 });
+  metadataUrl,
+  name,
+  addToMuseboard
+}: {
+  chain: string,
+  collection: string;
+  tokenId: number;
+  metadataUrl: string;
+  name: string;
+  addToMuseboard?: () => void
+}) {
+  const { fetchMetadataByUri } = useCollection(chain, collection);
+  const query = useQuery({
+    queryKey: ["chain", chain, "collection", collection, "token", tokenId],
+    cacheTime: 60 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
+    queryFn: () => fetchMetadataByUri(metadataUrl)
+  });
 
-  useEffect(() => {
-    if (token.isLoading) { return; }
+  function parseImageUrl (image: string) {
+    const url = image
+      .replace("ipfs://", "https://ipfs.io/ipfs/")
+      .replace('ipfs/ipfs/', 'ipfs/')
+      .replace('https://ipfs.pixura.io/', 'https://ipfs.io/');
 
-    const imagePath = "token.images.0.url";
-    const descriptionPath = "token.description";
-
-    const imageUrl = safeGet(token.data, imagePath, '');
-    const iconUrl = safeGet(token.data, 'token.icons.0.url');
-    
-    const { title, description } = extractTitle(safeGet(token.data, descriptionPath, ''));
-
-    if (!title && !description) {
-      const { title: cTitle, description: cDescription } = extractTitle(
-        safeGet(token.data, 'collection.description') || safeGet(token.data, 'collection.name', '')
-      );
-
-      setAlt(cTitle ? cTitle : cDescription);
-    } else {
-      setAlt(title ? title : description);
+    if (url.startsWith('https://')) {
+      return `http://localhost:8080/300x,q90/${url}`
     }
 
-    if (imageUrl) {
-      setImage((imageUrl as string).replace("ipfs://", IPFS_GATEWAY));
-
-      const height = safeGet(token.data, 'token.images.0.height', 1) as number;
-      const width = safeGet(token.data, 'token.images.0.width', 1) as number;
-
-      setAspect(`${height}/${width * 1.2}`);
-
-      return;
-    }
-
-    if (iconUrl) {
-      setImage((iconUrl as string).replace("ipfs://", IPFS_GATEWAY));
-
-      return;
-    }
-    
-    // Fallback to loading collection image
-    const collectionMetadataUrl = safeGet(token.data, 'collection.metadata.url');
-
-    if (!collectionMetadataUrl) { return; }
-
-    fetch((collectionMetadataUrl as string).replace("ipfs://", IPFS_GATEWAY))
-      .then(res => res.json())
-      .then((_colData) => {
-        const logoUrl = safeGet(_colData, "LSP4Metadata.images.0.0.url") || safeGet(_colData, "LSP4Metadata.icon.0.url", '');
-
-        logoUrl && setImage(logoUrl.replace("ipfs://", IPFS_GATEWAY));
-      })
-  }, [token]);
-  
-  function addToMuseboard() {
-    window.alert('Add To Museboard');
+    return url;
   }
 
-  if (token.isLoading) {
+  function setDimensions(e: any) {
+    const height = e.target.height;
+    const width = e.target.width;
+
+    if (width/height > 2) {
+      return queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
+        imageMeta: { height: 400, width: 400 }
+      }, query.data))
+    }
+
+    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
+      imageMeta: { height, width }
+    }, query.data))
+  }
+
+  function setSkip () {
+    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
+      skip: true
+    }, query.data))
+  }
+
+  if (query.isLoading) {
     return (
-      <div
-        className="group overflow-hidden rounded-3xl flex flex-col border border-gray-300 hover:shadow-2xl mb-8 transition-all transition-duration-700 hover:p-4"
-        style={{ height: 400 + padding }}
-      >
-        <div className="animate-pulse grow bg-cover bg-center rounded-3xl bg-gray-200"></div>
+      <div className="rounded-3xl aspect-square bg-slate-100 text-center align-middle animate-pulse">
+      </div>
+    );
+  }
+
+  if (!query.data) {
+    console.log(`No data found for: ${collection}, ${tokenId}, ${metadataUrl}`);
+
+    return <></>;
+  }
+
+  if (query.data.skip) {
+    console.log('skipped', collection, tokenId);
+
+    return <></>;
+  }
+
+  if (!query.data.imageMeta) {
+    return (
+      <div className="rounded-3xl aspect-square overflow-hidden border">
+        <img
+          className="rounded-3xl blur-sm bg-slate-200 animate-pulse"
+          src={parseImageUrl(query.data.image)}
+          onLoad={setDimensions}
+          onError={() => setSkip()}
+        />
+        <div className="p-4 group-hover:p-2 transition-all transition-duration-700">
+          <p className="truncate font-semibold text-gray-700">
+            {query.data.name || `${name} #${tokenId}`}
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className={`group grow-0 overflow-hidden rounded-3xl flex flex-col border border-gray-300 hover:shadow-2xl transition-all transition-duration-700 hover:p-4 ${classes}`}
-      style={aspect ? { aspectRatio: aspect } : { height: 400 + padding }}
+      className={`group grow-0 overflow-hidden rounded-3xl flex flex-col border border-gray-300 hover:shadow-2xl transition-all transition-duration-700 hover:p-4`}
+      style={{ aspectRatio: `${query.data.imageMeta.width}/${query.data.imageMeta.height}` }}
     >
       <Link
-        to={`/collection/${address}/token/${tokenId}`}
-        className={`grow bg-cover bg-center rounded-3xl ${
-          image ? "" : "bg-gradient-to-r from-purple-500 to-pink-500"
-        }`}
-        style={image ? { backgroundImage: `url(${image})` } : {}}
+        id={`explore:${collection}:${tokenId}`}
+        to={`/collection/${chain}/${collection}/token/${tokenId}`}
+        className={`grow bg-cover bg-center rounded-3xl bg-gray-200`}
+        style={{
+          backgroundImage: `url(${parseImageUrl(query.data.image)})`,
+        }}
       ></Link>
       <div>
         <div className="p-4 group-hover:p-2 transition-all transition-duration-700">
-          <p className="truncate font-semibold text-gray-700">{alt}</p>
+          <p className="truncate font-semibold text-gray-700">
+            {query.data.name || `${name} #${tokenId}`}
+          </p>
         </div>
         <div className="transition-all transition-duration-700 hidden group-hover:block">
-          <p className="px-2 mb-2 font-semibold"><span className="text-gray-600 font-normal mr-2 mb-2 ">From</span>{(token.data as any).collection?.name}</p>
-          <button onClick={addToMuseboard} className="bg-black text-white font-bold py-4 shadow-lg w-full rounded-2xl">
-            <img className="inline mr-4" alt="Add" src={addIcon} />
+          <p className="px-2 mb-2 font-semibold">
+            <span className="text-gray-600 font-normal mr-2 mb-2 ">From</span>
+            {name}
+          </p>
+          { addToMuseboard && <button
+            onClick={() => addToMuseboard()}
+            className="bg-black text-white font-bold py-4 shadow-lg w-full rounded-2xl"
+          >
             Add to museboard
-          </button>
+          </button> }
         </div>
       </div>
     </div>

@@ -1,144 +1,13 @@
-import { Link } from "react-router-dom";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import { useEffect, useState } from "react";
 import { Masonry , useInfiniteLoader } from "masonic";
 
 import { Button } from "../../common/buttons";
-import { queryClient } from "../../main";
 import collections from '../../collections';
-import { useCollection } from "../../hooks/useCollection";
 import { fetchTokens } from "../../utils";
-
-function NFTCard({
-  chain,
-  collection,
-  tokenId,
-  metadataUrl,
-  name,
-}: {
-  chain: string,
-  collection: string;
-  tokenId: number;
-  metadataUrl: string;
-  name: string;
-}) {
-  const { fetchMetadataByUri } = useCollection(chain, collection);
-  const query = useQuery({
-    queryKey: ["chain", chain, "collection", collection, "token", tokenId],
-    cacheTime: 60 * 60 * 1000,
-    staleTime: 60 * 60 * 1000,
-    queryFn: () => fetchMetadataByUri(metadataUrl)
-  });
-
-  function parseImageUrl (image: string) {
-    const url = image
-      .replace("ipfs://", "https://ipfs.io/ipfs/")
-      .replace('ipfs/ipfs/', 'ipfs/')
-      .replace('https://ipfs.pixura.io/', 'https://ipfs.io/');
-
-    if (url.startsWith('https://')) {
-      return `http://localhost:8080/300x,q90/${url}`
-    }
-
-    return url;
-  }
-
-  function setDimensions(e: any) {
-    const height = e.target.height;
-    const width = e.target.width;
-
-    if (width/height > 2) {
-      return queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
-        imageMeta: { height: 400, width: 400 }
-      }, query.data))
-    }
-
-    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
-      imageMeta: { height, width }
-    }, query.data))
-  }
-
-  function setSkip () {
-    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
-      skip: true
-    }, query.data))
-  }
-
-  if (query.isLoading) {
-    return (
-      <div className="rounded-3xl aspect-square bg-slate-100 text-center align-middle animate-pulse">
-      </div>
-    );
-  }
-
-  if (!query.data) {
-    console.log(`No data found for: ${collection}, ${tokenId}, ${metadataUrl}`);
-
-    return <></>;
-  }
-
-  if (query.data.skip) {
-    console.log('skipped', collection, tokenId);
-
-    return <></>;
-  }
-
-  if (!query.data.imageMeta) {
-    return (
-      <div className="rounded-3xl aspect-square overflow-hidden border">
-        <img
-          className="rounded-3xl blur-sm bg-slate-200 animate-pulse"
-          src={parseImageUrl(query.data.image)}
-          onLoad={setDimensions}
-          onError={(x) => { console.log(x); setSkip() }}
-          loading="lazy"
-          crossOrigin=""
-        />
-        <div className="p-4 group-hover:p-2 transition-all transition-duration-700">
-          <p className="truncate font-semibold text-gray-700">
-            {query.data.name || `${name} #${tokenId}`}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={`group grow-0 overflow-hidden rounded-3xl flex flex-col border border-gray-300 hover:shadow-2xl transition-all transition-duration-700 hover:p-4`}
-      style={{ aspectRatio: `${query.data.imageMeta.width}/${query.data.imageMeta.height}` }}
-    >
-      <Link
-        id={`explore:${collection}:${tokenId}`}
-        to={`/collection/${chain}/${collection}/token/${tokenId}`}
-        className={`grow bg-cover bg-center rounded-3xl bg-gray-200`}
-        style={{
-          backgroundImage: `url(${parseImageUrl(query.data.image)})`,
-        }}
-      ></Link>
-      <div>
-        <div className="p-4 group-hover:p-2 transition-all transition-duration-700">
-          <p className="truncate font-semibold text-gray-700">
-            {query.data.name || `${name} #${tokenId}`}
-          </p>
-        </div>
-        <div className="transition-all transition-duration-700 hidden group-hover:block">
-          <p className="px-2 mb-2 font-semibold">
-            <span className="text-gray-600 font-normal mr-2 mb-2 ">From</span>
-            {name}
-          </p>
-          <button
-            onClick={console.log}
-            className="bg-black text-white font-bold py-4 shadow-lg w-full rounded-2xl"
-          >
-            Add to museboard
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+import { useModal } from "@ebay/nice-modal-react";
+import NFTCard from "../../common/NFTCard";
 
 function shuffle(array: unknown[]) {
   let currentIndex = array.length,
@@ -159,62 +28,6 @@ function shuffle(array: unknown[]) {
 
   return array;
 }
-
-// async function fetchTokens(collection: { metadata: any, contract: Contract }, startAt = 0, pageSize = 20) {
-//   let count = 0,
-//     tokenId = startAt;
-
-//   const tokens = [];
-//   const name = collection.contract.name();
-//   let failedAttempts = 0;
-//   // const totalSupply = await collection.contract.totalSupply();
-
-//   console.log('fetching', collection.contract.target, startAt, pageSize);
-
-//   while (count < pageSize) {
-//     if (failedAttempts == 10) {
-//       break;
-//     }
-
-//     try {
-//       let tokenUri;
-//       let _tokenId = tokenId;
-
-//       if (collection.metadata.enumerable) {
-//         _tokenId = Number(await collection.contract.tokenByIndex(tokenId));
-//         tokenUri = await collection.contract.tokenURI(_tokenId)
-//       }
-//       else if (collection.metadata.standard !== 'ERC721') {
-//         tokenUri = await collection.contract.uri(tokenId)
-//       } else {
-//         tokenUri = await collection.contract.tokenURI(tokenId)
-//       }
-
-//       tokens.push({
-//         id: _tokenId,
-//         address: collection.contract.target as string,
-//         // metadata: tokenUri.startsWith('https://') ? `http://localhost:3000/proxy?url=${encodeURIComponent(tokenUri)}` : tokenUri,
-//         metadata: tokenUri,
-//         collection: await name,
-//         chain: collection.metadata.chain
-//       });
-
-//       count++;
-//     } catch (error: any) {
-//       failedAttempts++;
-
-//       console.log("failed for token", collection.contract.target, tokenId);
-//     } finally {
-//       tokenId++;
-//     }
-//   }
-
-//   if (failedAttempts === 10) {
-//     return { data: tokens, cursor: tokenId, failed: true }
-//   }
-
-//   return { data: tokens, cursor: tokenId };
-// }
 
 function pickRandom(arr: any[], n: number) {
   let len = arr.length;
@@ -243,6 +56,7 @@ type FetchTokensRes = {
 export default function Explore() {
   const collectionsCount = 8;
   const tokenPerCollection = 2;
+  const modal = useModal('add-to-museboard');
   // const pageSize = collectionsCount * tokenPerCollection;
   const [loadAfter, setLoadAfter] = useState(Date.now() + 10 * 1000);
   const query = useInfiniteQuery({
@@ -304,11 +118,11 @@ export default function Explore() {
   const [tokensList, setTokensList] = useState<any>([]);
 
   const maybeLoadMore = useInfiniteLoader((startIdx, endIdx, currentItems) => {
-    console.log('load more', Date.now(), loadAfter, startIdx, endIdx);
+    // console.log('load more', Date.now(), loadAfter, startIdx, endIdx);
     const timestamp = Date.now()
 
     if (loadAfter > timestamp) {
-      console.log(`waiting for ${loadAfter - timestamp}ms`);
+      // console.log(`waiting for ${loadAfter - timestamp}ms`);
 
       return;
     }
@@ -330,6 +144,10 @@ export default function Explore() {
     return query.data ? query.data.pages.map((p) => p?.data).flat().filter((t: any) => !t?.skip) : []
   }
 
+  function addToMuseboard ({ chain, collection, tokenId }: any) {
+    modal.show({ chain, collection, tokenId });
+  }
+
   useEffect(() => {
     if (tokensList.length === 0) {
       setTokensList(getItems());
@@ -347,7 +165,7 @@ export default function Explore() {
           columnWidth={250}
           onRender={maybeLoadMore}
           render={({ data }: { data: any }) =>{
-            return <NFTCard chain={data.chain} tokenId={data.id} collection={data.address} metadataUrl={data.metadata} name={data.collection} />
+            return <NFTCard chain={data.chain} tokenId={data.id} collection={data.address} metadataUrl={data.metadata} name={data.collection} addToMuseboard={() => addToMuseboard({ chain: data.chain, collection: data.address, tokenId: data.id })} />
           }}
         />
         { !query.isLoading && <div className="mx-auto w-64 my-14">

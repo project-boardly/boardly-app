@@ -52,7 +52,6 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
       onToken({
         id: _tokenId,
         address: contract.target as string,
-        // metadata: tokenUri.startsWith('https://') ? `http://localhost:3000/proxy?url=${encodeURIComponent(tokenUri)}` : tokenUri,
         metadata: tokenUri,
         collection: await name,
         chain: meta.chain
@@ -61,7 +60,6 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
       tokens.push({
         id: _tokenId,
         address: contract.target as string,
-        // metadata: tokenUri.startsWith('https://') ? `http://localhost:3000/proxy?url=${encodeURIComponent(tokenUri)}` : tokenUri,
         metadata: tokenUri,
         collection: await name,
         chain: meta.chain

@@ -11,6 +11,7 @@ import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { Collection } from "./pages/collection/Collection";
 import Explore from "./pages/explore/Explore";
 import Token from "./pages/token";
+import ProfilePage from "./pages/profile";
 
 const router = (queryClient: QueryClient) => createBrowserRouter(
   createRoutesFromElements(
@@ -18,6 +19,7 @@ const router = (queryClient: QueryClient) => createBrowserRouter(
       <Route path="/" element={<Explore />} />
       <Route path='/collection/:chain/:collection/token/:tokenId' element={<Token />} />
       <Route path='/collection/:chain/:address' element={<Collection />} />
+      <Route path='/profile/:address' element={<ProfilePage />} />
     </Route>
   )
 );

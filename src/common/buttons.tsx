@@ -42,10 +42,10 @@ export function LinkButton({
 }) {
   function getClassName({ isActive }: { isActive: boolean }) {
     if (variant === 'outline') {
-      return isActive ? OUTLINE_BTN_CLASSES : OUTLINE_DISABLED_BTN_CLASSES
+      return `group ${isActive ? OUTLINE_BTN_CLASSES : OUTLINE_DISABLED_BTN_CLASSES}`;
     }
 
-    return isActive ? DARK_BTN_CLASSES : LIGHT_BTN_CLASSES
+    return `group ${isActive ? DARK_BTN_CLASSES : LIGHT_BTN_CLASSES}`;
   }
 
   return (
@@ -54,7 +54,7 @@ export function LinkButton({
       className={getClassName}
       {...props}
     >
-      {children as ReactNode}
+      {children}
     </NavLink>
   );
 }

@@ -15,16 +15,16 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: 'auto',
-      devOptions: {
-        enabled: true,
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,jpeg,jpg}']
-      }
-    }),
+    // VitePWA({
+    //   registerType: "autoUpdate",
+    //   injectRegister: 'auto',
+    //   devOptions: {
+    //     enabled: true,
+    //   },
+    //   workbox: {
+    //     globPatterns: ['**/*.{js,css,html,ico,png,svg,jpeg,jpg}']
+    //   }
+    // }),
     comlink()
   ],
   server: {

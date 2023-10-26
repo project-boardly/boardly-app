@@ -1,10 +1,10 @@
 import Web3Container from './Web3Container';
-// import NiceModal from '@ebay/nice-modal-react';
+import NiceModal from '@ebay/nice-modal-react';
 
 import Router from './Router';
-// import AuthModal from './modals/AuthModal';
+import AddToMuseboard from './modals/AddToMuseboard';
 
-// NiceModal.register('museboard-auth', AuthModal);
+NiceModal.register('add-to-museboard', AddToMuseboard);
 
 function App() {
   return (

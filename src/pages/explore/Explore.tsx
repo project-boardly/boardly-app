@@ -1,55 +1,75 @@
 import { Link } from "react-router-dom";
-import { ERC721, providers } from "../../hooks/useCollection";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+
+import { useEffect, useState } from "react";
+import { Masonry , useInfiniteLoader } from "masonic";
+
 import { Button } from "../../common/buttons";
-import { useEffect, useRef, useState } from "react";
-import { Contract } from "ethers";
-
-import AutoSizer from "react-virtualized-auto-sizer";
-import { FixedSizeList as List } from "react-window";
-
-type ImageMeta = {
-  height: number;
-  width: number;
-  aspect: number;
-};
+import { queryClient } from "../../main";
+import collections from '../../collections';
+import { useCollection } from "../../hooks/useCollection";
+import { fetchTokens } from "../../utils";
 
 function NFTCard({
+  chain,
   collection,
   tokenId,
   metadataUrl,
   name,
 }: {
+  chain: string,
   collection: string;
   tokenId: number;
   metadataUrl: string;
   name: string;
 }) {
-  const [imageMeta, setImageMeta] = useState<null | ImageMeta>(null);
+  const { fetchMetadataByUri } = useCollection(chain, collection);
   const query = useQuery({
-    queryKey: ["collection", collection, "token", tokenId],
-    queryFn: () =>
-      fetch(
-        metadataUrl.replace(
-          "https://cdn.kaizen.finance",
-          "http://localhost:8010/proxy"
-        )
-      ).then((res) => res.json()),
+    queryKey: ["chain", chain, "collection", collection, "token", tokenId],
+    cacheTime: 60 * 60 * 1000,
+    staleTime: 60 * 60 * 1000,
+    queryFn: () => fetchMetadataByUri(metadataUrl)
   });
+
+  function parseImageUrl (image: string) {
+    const url = image
+      .replace("ipfs://", "https://ipfs.io/ipfs/")
+      .replace('ipfs/ipfs/', 'ipfs/')
+      .replace('https://ipfs.pixura.io/', 'https://ipfs.io/');
+
+    if (url.startsWith('https://')) {
+      return `http://localhost:8080/300x,q90/${url}`
+    }
+
+    return url;
+  }
 
   function setDimensions(e: any) {
     const height = e.target.height;
     const width = e.target.width;
 
-    setImageMeta({
-      height,
-      width,
-      aspect: width / height,
-    });
+    if (width/height > 2) {
+      return queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
+        imageMeta: { height: 400, width: 400 }
+      }, query.data))
+    }
+
+    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
+      imageMeta: { height, width }
+    }, query.data))
+  }
+
+  function setSkip () {
+    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
+      skip: true
+    }, query.data))
   }
 
   if (query.isLoading) {
-    return <div>Loading</div>;
+    return (
+      <div className="rounded-3xl aspect-square bg-slate-100 text-center align-middle animate-pulse">
+      </div>
+    );
   }
 
   if (!query.data) {
@@ -58,13 +78,22 @@ function NFTCard({
     return <></>;
   }
 
-  if (!imageMeta) {
+  if (query.data.skip) {
+    console.log('skipped', collection, tokenId);
+
+    return <></>;
+  }
+
+  if (!query.data.imageMeta) {
     return (
-      <div className="rounded-3xl overflow-hidden border border-gray-300 mb-4">
+      <div className="rounded-3xl aspect-square overflow-hidden border">
         <img
-          className="rounded-3xl"
-          src={query.data.image.replace("ipfs://", "https://ipfs.io/ipfs/")}
+          className="rounded-3xl blur-sm bg-slate-200 animate-pulse"
+          src={parseImageUrl(query.data.image)}
           onLoad={setDimensions}
+          onError={(x) => { console.log(x); setSkip() }}
+          loading="lazy"
+          crossOrigin=""
         />
         <div className="p-4 group-hover:p-2 transition-all transition-duration-700">
           <p className="truncate font-semibold text-gray-700">
@@ -77,18 +106,15 @@ function NFTCard({
 
   return (
     <div
-      className={`group grow-0 overflow-hidden rounded-3xl flex flex-col border border-gray-300 hover:shadow-2xl transition-all transition-duration-700 hover:p-4 mb-4`}
-      style={{ aspectRatio: imageMeta.aspect }}
+      className={`group grow-0 overflow-hidden rounded-3xl flex flex-col border border-gray-300 hover:shadow-2xl transition-all transition-duration-700 hover:p-4`}
+      style={{ aspectRatio: `${query.data.imageMeta.width}/${query.data.imageMeta.height}` }}
     >
       <Link
         id={`explore:${collection}:${tokenId}`}
-        to={`/collection/${collection}/token/${tokenId}`}
+        to={`/collection/${chain}/${collection}/token/${tokenId}`}
         className={`grow bg-cover bg-center rounded-3xl bg-gray-200`}
         style={{
-          backgroundImage: `url(${query.data.image.replace(
-            "ipfs://",
-            "https://ipfs.io/ipfs/"
-          )})`,
+          backgroundImage: `url(${parseImageUrl(query.data.image)})`,
         }}
       ></Link>
       <div>
@@ -114,93 +140,6 @@ function NFTCard({
   );
 }
 
-function EmptyToken() {
-  return <div className="invisible"></div>;
-}
-
-function generateGrid(count: number, columns: number) {
-  const rows = Math.ceil(count / columns);
-  const coordinates = Array(columns)
-    .fill(1)
-    .map((_, x) => {
-      return Array(rows)
-        .fill(1)
-        .map((__, y) => [y * columns + x, x, y]);
-    });
-
-  return coordinates;
-}
-
-function Items({ items, render }: { items: any[]; render: any }) {
-  const Row = ({ index }: { index: number }) => {
-    return render(items[index][0]);
-  };
-
-  function handleResize({ height }) {
-    console.log("height changed");
-  }
-
-  return (
-    <div className="block h-[100vh]">
-      <AutoSizer onResize={handleResize}>
-        {({ height, width }) => (
-          <List
-            height={height}
-            itemCount={items.length}
-            itemSize={460}
-            width={width}
-            overscanCount={2}
-            style={{ overflow: "visible" }}
-          >
-            {Row}
-          </List>
-        )}
-      </AutoSizer>
-    </div>
-  );
-}
-
-function Masonry({
-  count,
-  columns,
-  render,
-}: {
-  count: number;
-  columns: number;
-  render: (index: number) => JSX.Element;
-}) {
-  const grid = generateGrid(count, columns);
-  const content = grid.map((column, colIdx) => {
-    if (column.length === 0) {
-      return <p key={colIdx}>Loading</p>;
-    }
-
-    return (
-      <Items
-        key={colIdx}
-        items={column}
-        render={(listIdx: number) =>
-          listIdx > count - 1 ? <EmptyToken /> : render(listIdx)
-        }
-      />
-    );
-  });
-
-  if (columns === 3) {
-    return <div className="grid grid-cols-3 gap-4">{content}</div>;
-  }
-
-  if (columns === 4) {
-    return <div className="grid grid-cols-4 gap-4">{content}</div>;
-  }
-
-  if (columns === 5) {
-    return <div className="grid grid-cols-5 gap-4">{content}</div>;
-  }
-
-  return <div className="grid grid-cols-1 gap-4">{content}</div>;
-}
-
 function shuffle(array: unknown[]) {
   let currentIndex = array.length,
     randomIndex;
@@ -221,83 +160,61 @@ function shuffle(array: unknown[]) {
   return array;
 }
 
-const collections = [
-  {
-    chain: "ethereum",
-    address: "0xeb3f9f56eebcb2628e7de29ff93aab91616a0c6f",
-    interface: ERC721,
-  },
-  {
-    chain: "ethereum",
-    address: "0xf9c362cdd6eeba080dd87845e88512aa0a18c615",
-    interface: ERC721,
-  },
-  {
-    chain: "ethereum",
-    address: "0x306b1ea3ecdf94ab739f1910bbda052ed4a9f949",
-    interface: ERC721,
-  },
-  {
-    chain: "ethereum",
-    address: "0x7a63d17f5a59bca04b6702f461b1f1a1c59b100b",
-    interface: ERC721,
-  },
-  {
-    chain: "ethereum",
-    address: "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d",
-    interface: ERC721,
-  },
-  {
-    chain: "ethereum",
-    address: "0xbee7cb80dfd21a9eaae714208f361601f68eb746",
-    interface: ERC721,
-  },
-  {
-    chain: "ethereum",
-    address: "0xB6c9a4E8AE1cCF33c2dC3D8c4ab322E4529233E2",
-    interface: ERC721,
-  },
-  {
-    chain: "ethereum",
-    address: "0x18adc812fe66b9381700c2217f0c9dc816c879e6",
-    interface: ERC721,
-  },
-].map(
-  (collection) =>
-    new Contract(
-      collection.address,
-      collection.interface,
-      providers[collection.chain]
-    )
-);
+// async function fetchTokens(collection: { metadata: any, contract: Contract }, startAt = 0, pageSize = 20) {
+//   let count = 0,
+//     tokenId = startAt;
 
-async function fetchTokens(collection: Contract, startAt = 0, pageSize = 20) {
-  let count = 0,
-    tokenId = startAt;
+//   const tokens = [];
+//   const name = collection.contract.name();
+//   let failedAttempts = 0;
+//   // const totalSupply = await collection.contract.totalSupply();
 
-  const tokens = [];
-  const name = collection.name();
+//   console.log('fetching', collection.contract.target, startAt, pageSize);
 
-  while (count < pageSize) {
-    try {
-      const tokenUri = await collection.tokenURI(tokenId);
+//   while (count < pageSize) {
+//     if (failedAttempts == 10) {
+//       break;
+//     }
 
-      tokens.push({
-        id: tokenId,
-        address: collection.target as string,
-        metadata: tokenUri.replace("ipfs://", "https://ipfs.io/ipfs/"),
-        collection: await name,
-      });
-      count++;
-    } catch (error) {
-      console.log("failed for token", tokenId);
-    } finally {
-      tokenId++;
-    }
-  }
+//     try {
+//       let tokenUri;
+//       let _tokenId = tokenId;
 
-  return { data: tokens, cursor: tokenId };
-}
+//       if (collection.metadata.enumerable) {
+//         _tokenId = Number(await collection.contract.tokenByIndex(tokenId));
+//         tokenUri = await collection.contract.tokenURI(_tokenId)
+//       }
+//       else if (collection.metadata.standard !== 'ERC721') {
+//         tokenUri = await collection.contract.uri(tokenId)
+//       } else {
+//         tokenUri = await collection.contract.tokenURI(tokenId)
+//       }
+
+//       tokens.push({
+//         id: _tokenId,
+//         address: collection.contract.target as string,
+//         // metadata: tokenUri.startsWith('https://') ? `http://localhost:3000/proxy?url=${encodeURIComponent(tokenUri)}` : tokenUri,
+//         metadata: tokenUri,
+//         collection: await name,
+//         chain: collection.metadata.chain
+//       });
+
+//       count++;
+//     } catch (error: any) {
+//       failedAttempts++;
+
+//       console.log("failed for token", collection.contract.target, tokenId);
+//     } finally {
+//       tokenId++;
+//     }
+//   }
+
+//   if (failedAttempts === 10) {
+//     return { data: tokens, cursor: tokenId, failed: true }
+//   }
+
+//   return { data: tokens, cursor: tokenId };
+// }
 
 function pickRandom(arr: any[], n: number) {
   let len = arr.length;
@@ -317,10 +234,17 @@ function pickRandom(arr: any[], n: number) {
   return result;
 }
 
-export function Explore() {
-  const pageSize = 3 * 20;
-  const contracts = pickRandom(collections, 5);
+type FetchTokensRes = {
+  cursor: number;
+  data: any[];
+  failed?: boolean;
+}
 
+export default function Explore() {
+  const collectionsCount = 8;
+  const tokenPerCollection = 2;
+  // const pageSize = collectionsCount * tokenPerCollection;
+  const [loadAfter, setLoadAfter] = useState(Date.now() + 10 * 1000);
   const query = useInfiniteQuery({
     queryKey: ["explore"],
     refetchOnReconnect: false,
@@ -328,93 +252,108 @@ export function Explore() {
     refetchOnWindowFocus: false,
     cacheTime: 60 * 60 * 1000,
     queryFn: async ({ pageParam = {} }) => {
-      const counts = shuffle(Array(5).fill((3 * 20) / 5)) as number[];
+      const counts = shuffle(Array(collectionsCount).fill(tokenPerCollection)) as number[];
+      const contracts = pickRandom(collections, collectionsCount);
 
-      const tokens = await Promise.all(
-        counts.map((count, idx) => {
-          const collection = contracts[idx];
-          const address = collection.target as string;
-          const state = pageParam[address] || { cursor: 1 };
+      try {
+        const tokens = await Promise.all(
+          counts.map((count, idx) => {
+            
+            const collection = contracts[idx];
+            const address = collection.contract.target as string;
+            const state = pageParam[address] || { cursor: 1 };
 
-          return fetchTokens(collection, state.cursor, count);
-        })
-      );
+            // return fetchTokens(collection, state.cursor, count);
+            return new Promise((resolve) => {
+              fetchTokens(
+                collection.metadata.chain,
+                collection.contract.target,
+                collection.metadata.standard,
+                collection.metadata.enumerable,
+                state.cursor,
+                count,
+                resolve,
+                (token: any) => {
+                  setTokensList((_tokens: any[]) => _tokens.concat([token]));
+                }
+              );
+            });
+          })
+        ) as FetchTokensRes[];
 
-      const newState = tokens.reduce((acc, collTokens, idx) => {
-        const address = contracts[idx].target as string;
-        const state = { cursor: collTokens.cursor };
+        const newState = tokens.reduce((acc, collTokens, idx) => {
+          const address = contracts[idx].contract.target as string;
+          const state = { cursor: collTokens?.cursor };
 
-        acc[address] = state;
+          acc[address] = state;
 
-        return acc;
-      }, pageParam);
+          return acc;
+        }, pageParam);
 
-      return {
-        data: shuffle(tokens.map((list) => list.data).flat()),
-        state: newState,
-      };
+        return {
+          data: shuffle(tokens.map((list) => list.data).flat()),
+          state: newState,
+        };
+      }
+      catch (err) {
+        console.log(err);
+      }
     },
-    getNextPageParam: (page) => page.state,
+    getNextPageParam: (page) => page?.state,
+  });
+  const [tokensList, setTokensList] = useState<any>([]);
+
+  const maybeLoadMore = useInfiniteLoader((startIdx, endIdx, currentItems) => {
+    console.log('load more', Date.now(), loadAfter, startIdx, endIdx);
+    const timestamp = Date.now()
+
+    if (loadAfter > timestamp) {
+      console.log(`waiting for ${loadAfter - timestamp}ms`);
+
+      return;
+    }
+
+    console.log('loading items');
+
+    if (startIdx >= currentItems.length) {
+      setLoadAfter(timestamp + 120 * 1000);
+
+      query.fetchNextPage().then(() => {
+        setLoadAfter(Date.now() + 15 * 1000);
+      });
+    }
+  }, {
+    isItemLoaded: (index, items) => !!items[index]
   });
 
-  const [columns, setColumns] = useState(4);
-
-  function renderForIndex(index: number) {
-    try {
-      const page = Math.floor(index / pageSize),
-        itemNum = index - page * pageSize,
-        {
-          id: tokenId,
-          address,
-          metadata,
-          collection: name,
-        } = query.data?.pages[page].data[itemNum] as any;
-
-      return (
-        <NFTCard
-          collection={address}
-          metadataUrl={metadata}
-          tokenId={tokenId}
-          name={name}
-        />
-      );
-    } catch (error) {
-      const page = Math.floor(index / pageSize),
-        itemNum = index - page * pageSize;
-
-      console.log(
-        `Loading failed for ${index}, Item: ${itemNum}, ${page}, ${index} :: ${pageSize}`
-      );
-
-      return <></>;
-    }
+  function getItems() {
+    return query.data ? query.data.pages.map((p) => p?.data).flat().filter((t: any) => !t?.skip) : []
   }
 
-  function getCount() {
-    if (!query.data) {
-      return 0;
+  useEffect(() => {
+    if (tokensList.length === 0) {
+      setTokensList(getItems());
     }
-
-    const pages = (query.data.pages.length as number) - 1;
-
-    const count = pages * pageSize + query.data.pages[pages].data.length;
-
-    return count;
-  }
+  }, [query.data]);
 
   return (
     <div>
       <div className="mx-16">
-        {
-          <Masonry
-            columns={columns}
-            count={getCount()}
-            render={renderForIndex}
-          />
-        }
+        <Masonry
+          items={tokensList}
+          columnGutter={8}
+          overscanBy={2}
+          maxColumnCount={5}
+          columnWidth={250}
+          onRender={maybeLoadMore}
+          render={({ data }: { data: any }) =>{
+            return <NFTCard chain={data.chain} tokenId={data.id} collection={data.address} metadataUrl={data.metadata} name={data.collection} />
+          }}
+        />
+        { !query.isLoading && <div className="mx-auto w-64 my-14">
+          <Button onClick={() => query.fetchNextPage()}>Load More</Button>
+        </div> }
       </div>
-      <Button onClick={() => query.fetchNextPage()}>Load More</Button>
-      <Button onClick={() => setColumns(5)}>Zoom Out</Button>
     </div>
   );
 }

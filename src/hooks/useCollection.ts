@@ -1,12 +1,15 @@
 import { Contract, JsonRpcProvider } from "ethers";
 
 import { abi } from 'museboard-contracts/artifacts/@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol/ERC721Enumerable.json';
+import ERC1155ABI from './ERC1155.json';
 
 export const providers: any = {
-  'ethereum': new JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/2eEiw8W63XB1bzIk-2XJHxPbZreVtM8V')
+  'ethereum': new JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/2eEiw8W63XB1bzIk-2XJHxPbZreVtM8V'),
+  'base': new JsonRpcProvider('https://mainnet.base.org')
 };
 
 export const ERC721 = abi;
+export const ERC1155 = ERC1155ABI;
 
 export function useCollection (chain: string, address: string) {
   const provider = providers[chain];
@@ -22,6 +25,8 @@ export function useCollection (chain: string, address: string) {
       try {
         const tokenUri = await collection.tokenURI(tokenId);
 
+        console.log(tokenUri);
+
         tokens.push({ id: tokenId, metadata: tokenUri.replace('ipfs://', 'https://ipfs.io/ipfs/') });
         count++;
       } catch (error) {
@@ -34,8 +39,37 @@ export function useCollection (chain: string, address: string) {
     return { data: tokens, cursor: tokenId };
   }
 
+  async function fetchMetadata(tokenId: string) {
+    const tokenUri = await collection.tokenURI(tokenId);
+
+    return fetchMetadataByUri(tokenUri)
+  }
+
+  async function fetchMetadataByUri(uri: string) {
+    let tokenUri = uri
+      .replace("https://cdn.kaizen.finance", "http://localhost:8010/proxy")
+      .replace('ipfs://', 'https://ipfs.io/ipfs/')
+      .replace('https://gateway.pinata.cloud/', 'https://ipfs.io/ipfs/')
+      .replace('https://ipfs.pixura.io/', 'https://ipfs.io/ipfs/')
+      .replace('ipfs/ipfs/', 'ipfs/');
+
+    if (uri.startsWith('https://token.artblocks.io/')) {
+      return fetch(tokenUri)
+        .then((res) => res.json());
+    }
+
+    if (uri.startsWith('http')) {
+      tokenUri = `http://localhost:3000/proxy?url=${encodeURIComponent(uri)}`;
+    }
+
+    return fetch(tokenUri)
+     .then((res) => res.json())
+  }
+
   return {
     fetchTokens,
+    fetchMetadata,
+    fetchMetadataByUri,
     contract: collection
   };
 }

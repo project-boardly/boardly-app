@@ -13,7 +13,7 @@ import { BrowserProvider } from "ethers";
 
 import { hooks } from "../connectors/default";
 import { authenticate } from "../utils/siwe";
-import { LinkButton, Button } from "../common/buttons";
+import { Button } from "../common/buttons";
 
 import logo from "../logo.svg";
 

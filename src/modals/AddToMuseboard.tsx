@@ -7,6 +7,8 @@ import { useTransactionSender } from "../hooks/transactions";
 import { getAuth } from "firebase/auth";
 import { generateSlug } from "random-word-slugs";
 import { TBoard, TToken, matchTokens, useBoardsQuery } from "../queries/boards";
+import { useToasts } from "react-toast-notifications";
+import { Link } from "react-router-dom";
 
 export function Loader() {
   return (
@@ -41,9 +43,11 @@ const AddToMuseboard = NiceModal.create(() => {
   const { query, addNew, addTokenToBoard } = useBoardsQuery(user?.uid as string);
 
   async function createNew () {
-    addNew(boardName, [modal.args as TToken]);
+    const boardId = addNew(boardName, [modal.args as TToken]);
+
     setBoardName(generateSlug());
 
+    modal.resolve({ boardId });
     modal.hide();
     query.refetch();
   }
@@ -51,6 +55,7 @@ const AddToMuseboard = NiceModal.create(() => {
   async function handleAddTokenToBoard(boardId: string) {
     addTokenToBoard(boardId, modal.args as TToken)
 
+    modal.resolve({ boardId });
     modal.hide();
     query.refetch();
   }
@@ -99,9 +104,12 @@ const AddToMuseboard = NiceModal.create(() => {
                 </Dialog.Description>
                 <ul>
                   { query.data && query.data.map((board: TBoard) => <li key={board.id} className="my-2 font-semibold">
-                    <a className="inline-block rounded-lg hover:bg-gray-100 cursor-pointer w-full px-4 py-4" onClick={() => handleAddTokenToBoard(board.id)}>
-                      <img className="inline rounded-lg mr-4" src={board.image}/>
-                      {board.name}
+                    <a className="flex flex-row rounded-lg hover:bg-gray-100 cursor-pointer w-full px-4 py-4" onClick={() => handleAddTokenToBoard(board.id)}>
+                      <img className="inline rounded-lg mr-4 w-12" src={board.image}/>
+                      <div className="flex flex-col">
+                        <div>{board.name}</div>
+                        <small className="font-normal text-gray-500">{board.tokens.length} tokens</small>
+                      </div>
                     </a>
                   </li>) }
                   <li><a className="text-center block font-semibold bg-gray-200 hover:shadow-lg rounded-lg cursor-pointer py-4" onClick={() => createNew()}>Create New</a></li>

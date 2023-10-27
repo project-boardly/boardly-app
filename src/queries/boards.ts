@@ -65,6 +65,8 @@ function createNew (address: string, name: string, tokens: TToken[]) {
   _boards.push({ id: key } as TBoard)
   localStorage.setItem('boards', JSON.stringify(_boards.map(b => b.id)));
   localStorage.setItem(`board:${key}`, JSON.stringify({ name: name, tokens }));
+
+  return key;
 }
 
 export function matchTokens(a: TToken, b: TToken) {
@@ -101,4 +103,10 @@ export function useBoardsQuery(address: string) {
     addNew: (boardName: string, tokens: TToken[]) => createNew(address, boardName, tokens),
     addTokenToBoard
   }
+}
+
+export function useBoardQuery(boardId: string) {
+  const query = useQuery({ queryKey: ['boards:data', boardId], queryFn: () => getBoard(boardId) });
+
+  return query;
 }

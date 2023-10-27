@@ -3,8 +3,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-import { ToastProvider } from 'react-toast-notifications';
 import NiceModal from '@ebay/nice-modal-react';
+import { Toaster } from 'react-hot-toast';
 
 import { initializeApp } from "firebase/app";
 import { getFirestore  } from "firebase/firestore";
@@ -38,12 +38,11 @@ export const queryClient = new QueryClient();
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-    <ToastProvider placement='bottom-right'>
       <NiceModal.Provider>
         <ReactQueryDevtools initialIsOpen={false} />
         <App />
+        <Toaster position='bottom-center' />
       </NiceModal.Provider>
-      </ToastProvider>
     </QueryClientProvider>
   </React.StrictMode>
 )

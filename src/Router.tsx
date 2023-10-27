@@ -12,6 +12,7 @@ import { Collection } from "./pages/collection/Collection";
 import Explore from "./pages/explore/Explore";
 import Token from "./pages/token";
 import ProfilePage from "./pages/profile";
+import BoardPage from "./pages/board";
 
 const router = (queryClient: QueryClient) => createBrowserRouter(
   createRoutesFromElements(
@@ -20,6 +21,7 @@ const router = (queryClient: QueryClient) => createBrowserRouter(
       <Route path='/collection/:chain/:collection/token/:tokenId' element={<Token />} />
       <Route path='/collection/:chain/:address' element={<Collection />} />
       <Route path='/profile/:address' element={<ProfilePage />} />
+      <Route path='/board/:boardId' element={<BoardPage />} />
     </Route>
   )
 );

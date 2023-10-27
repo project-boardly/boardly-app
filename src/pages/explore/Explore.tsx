@@ -8,6 +8,8 @@ import collections from '../../collections';
 import { fetchTokens } from "../../utils";
 import { useModal } from "@ebay/nice-modal-react";
 import NFTCard from "../../common/NFTCard";
+import toast from 'react-hot-toast';
+import { Link } from "react-router-dom";
 
 function shuffle(array: unknown[]) {
   let currentIndex = array.length,
@@ -145,7 +147,10 @@ export default function Explore() {
   }
 
   function addToMuseboard ({ chain, collection, tokenId }: any) {
-    modal.show({ chain, collection, tokenId });
+    modal.show({ chain, collection, tokenId })
+      .then(() => {
+        toast.success(<p>Token added to board</p>);
+      });
   }
 
   useEffect(() => {

@@ -14,16 +14,16 @@ export default function NFTCard({
   chain: string,
   collection: string;
   tokenId: number;
-  metadataUrl: string;
+  metadataUrl?: string;
   name: string;
   addToMuseboard?: () => void
 }) {
-  const { fetchMetadataByUri } = useCollection(chain, collection);
+  const { fetchMetadataByUri, fetchMetadata } = useCollection(chain, collection);
   const query = useQuery({
     queryKey: ["chain", chain, "collection", collection, "token", tokenId],
     cacheTime: 60 * 60 * 1000,
     staleTime: 60 * 60 * 1000,
-    queryFn: () => fetchMetadataByUri(metadataUrl)
+    queryFn: () => metadataUrl ? fetchMetadataByUri(metadataUrl) : fetchMetadata(tokenId.toString())
   });
 
   function parseImageUrl (image: string) {

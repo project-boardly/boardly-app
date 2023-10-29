@@ -14,6 +14,8 @@ export type TBoard = {
   id: BoardId;
   name: string;
   image: string;
+  logo?: string,
+  images?: any[]
   owner?: string;
   tokens: TToken[];
 }

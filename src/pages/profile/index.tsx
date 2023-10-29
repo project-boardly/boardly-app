@@ -16,6 +16,7 @@ import { Address } from "../../common/components";
 import { TBoard, useBoardsQuery } from "../../queries/boards";
 import { getAuth } from "firebase/auth";
 import useMuseboard from "../../hooks/useMuseboard";
+import { useModal } from "@ebay/nice-modal-react";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -137,7 +138,13 @@ function ProfileCard({ address }: { address: string }) {
 }
 
 function Museboard({ board }: { board: TBoard }) {
-  const [image] = useState(board.image ? board.image : blockies.create({ seed: `${board?.owner}:${board.id}`, scale: 40, bgcolor: '#f1f1f1' }).toDataURL());
+  const [image] = useState(board.logo ? ipfsUrl(board.logo) : blockies.create({
+    seed: `${board?.owner}:${board.id}`,
+    scale: 40,
+    bgcolor: '#f1f1f1',
+    // spotcolor: 'rgba(0,0,0,0.6)',
+    // color: 'rgba(0,0,0, 0.4)'
+  }).toDataURL());
 
   return (
     <Link
@@ -179,11 +186,12 @@ const actions = [{ name: "NFTs" }, { name: "museboards" }];
 
 export default function ProfilePage() {
   const user = getAuth().currentUser;
+  const newMuseboardModal = useModal('create-museboard')
   const { address } = useParams();
   const [selected, setSelected] = useState(actions[1]);
 
   function openModal() {
-    console.log("open board modal");
+    newMuseboardModal.show();
   }
 
   return (

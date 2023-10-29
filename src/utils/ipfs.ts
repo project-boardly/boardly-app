@@ -1,7 +1,4 @@
-// import { ERC725, ERC725JSONSchema } from '@erc725/erc725.js';
-
-// import { LSP4MetadataBeforeUpload } from '@lukso/lsp-factory.js/build/main/src/lib/interfaces/lsp4-digital-asset';
-import { ipfsUpload } from '@lukso/lsp-factory.js/build/main/src/lib/helpers/uploader.helper';
+import { ipfsUpload, imageUpload } from '@lukso/lsp-factory.js/build/main/src/lib/helpers/uploader.helper';
 import { encodeValueContent } from '@erc725/erc725.js/build/main/src/lib/encoder';
 
 const ipfsGateway = {
@@ -16,6 +13,10 @@ export async function upload(data: Record<string, any>) {
   const jsonurl = encodeValueContent('JSONURL', { json: data, url });
 
   return { jsonurl, url };
+}
+
+export async function uploadImage(file: File) {
+  return imageUpload(file, { ipfsGateway });
 }
 
 // export async  function createBoard(title: string, description: string, file: File, contract owner: string, updateStatus: Function) {

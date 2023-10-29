@@ -9,7 +9,6 @@ import { fetchTokens } from "../../utils";
 import { useModal } from "@ebay/nice-modal-react";
 import NFTCard from "../../common/NFTCard";
 import toast from 'react-hot-toast';
-import { Link } from "react-router-dom";
 
 function shuffle(array: unknown[]) {
   let currentIndex = array.length,
@@ -128,8 +127,6 @@ export default function Explore() {
 
       return;
     }
-
-    console.log('loading items');
 
     if (startIdx >= currentItems.length) {
       setLoadAfter(timestamp + 120 * 1000);

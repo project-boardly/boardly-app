@@ -7,12 +7,15 @@ import {
 
 import Layout from "./pages/Layout";
 
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Collection } from "./pages/collection/Collection";
 import Explore from "./pages/explore/Explore";
 import Token from "./pages/token";
 import ProfilePage from "./pages/profile";
 import BoardPage from "./pages/board";
+import useMuseboard from "./hooks/useMuseboard";
+import { useEffect } from "react";
+import useUser from "./hooks/useUser";
 
 const router = (queryClient: QueryClient) => createBrowserRouter(
   createRoutesFromElements(
@@ -27,7 +30,21 @@ const router = (queryClient: QueryClient) => createBrowserRouter(
 );
 
 export default function Router () {
+  const { loading, user } = useUser();
   const queryClient = useQueryClient();
+  const { getBoards } = useMuseboard();
+
+  useEffect(() => {
+    if (loading) { return; }
+
+    if (!user) { return; }
+
+    queryClient.prefetchQuery({
+      queryKey: ['onchain:boards', user.uid],
+      queryFn: () => getBoards(user.uid as string),
+      staleTime: 1 * 24 * 60 * 60
+    });
+  }, [loading, user]);
 
   return <RouterProvider router={router(queryClient)} />
 }

@@ -28,7 +28,7 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
   let failedAttempts = 0;
   // const totalSupply = await collection.contract.totalSupply();
 
-  console.log('fetching', contract.target, startAt, pageSize);
+  console.debug('fetching', contract.target, startAt, pageSize);
 
   while (_count < pageSize) {
     if (failedAttempts == 10) {

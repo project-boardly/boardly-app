@@ -14,6 +14,7 @@ export type TBoard = {
   id: BoardId;
   name: string;
   image: string;
+  owner?: string;
   tokens: TToken[];
 }
 
@@ -29,8 +30,6 @@ function getBoards(): TBoard[] {
 
       return Object.assign({ id: boardId, image }, data);
     });
-
-    console.log(data);
 
     return data;
   }
@@ -88,11 +87,9 @@ function addTokenToBoard (boardId: BoardId, token: TToken) {
   }
   
   _board.tokens.push(token);
-
-  console.log(_board);
   localStorage.setItem(`board:${boardId}`, JSON.stringify(omit(_board, ['image'])));
 
-  return;
+  return _board;
 }
 
 export function useBoardsQuery(address: string) {

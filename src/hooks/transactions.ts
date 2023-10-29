@@ -2,7 +2,7 @@ import { Contract, BrowserProvider, FunctionFragment, TransactionRequest, Interf
 
 import { abi as ProfileABI } from '@lukso/lsp-smart-contracts/artifacts/UniversalProfile.json';
 import { abi as KeyManagerABI } from '@lukso/lsp-smart-contracts/artifacts/LSP6KeyManager.json';
-import { useToasts } from 'react-toast-notifications';
+import toast from 'react-hot-toast';
 
 export const ProfileInterface = new Interface(ProfileABI);
 export const KeyManagerInterfae = new Interface(KeyManagerABI);
@@ -43,7 +43,6 @@ function parseTransactionError (error: any) {
 
 export function useTransactionSender () {
   const provider = new BrowserProvider(window.lukso);
-  const { addToast } = useToasts();
 
   async function sendTransaction (contract: Contract, functionName: string | FunctionFragment, args: unknown[]) {
     const signer = await provider.getSigner();
@@ -54,19 +53,19 @@ export function useTransactionSender () {
   async function executeTransactionRequest (transactionReq: TransactionRequest) {
     const signer = await provider.getSigner();
 
-    addToast('sending transaction', { appearance: 'info', autoDismiss: true });
+    toast.loading('sending transaction');
 
     try {
       const txnResponse = await signer.sendTransaction(transactionReq);
 
-      addToast('sent transaction', { appearance: 'info', autoDismiss: true });
+      toast.success('sent transaction');
 
       return txnResponse
     }
     catch (_err) {
       const error =  parseTransactionError(_err);
 
-      addToast(`transaction failed: ${error.name}`);
+      toast.error(`transaction failed: ${error.name}`);
 
       throw error;
     }

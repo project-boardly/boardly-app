@@ -2,6 +2,8 @@ import { Fragment, useEffect, useState } from "react";
 
 import safeGet from "lodash/get";
 
+import * as blockies from 'blockies-ts';
+
 import { Listbox, Transition } from "@headlessui/react";
 
 import { Link, useParams } from "react-router-dom";
@@ -13,6 +15,7 @@ import { create } from "blockies-ts";
 import { Address } from "../../common/components";
 import { TBoard, useBoardsQuery } from "../../queries/boards";
 import { getAuth } from "firebase/auth";
+import useMuseboard from "../../hooks/useMuseboard";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -134,19 +137,17 @@ function ProfileCard({ address }: { address: string }) {
 }
 
 function Museboard({ board }: { board: TBoard }) {
+  const [image] = useState(board.image ? board.image : blockies.create({ seed: `${board?.owner}:${board.id}`, scale: 40, bgcolor: '#f1f1f1' }).toDataURL());
+
   return (
     <Link
       to={`/board/${board.id}`}
       className="group aspect-square"
     >
-      {board.image ? (
-        <img
-          src={board.image}
-          className="rounded-3xl bg-gradient-to-tr to-purple-500 from-cyan-500 hover:p-1 transition-all duration-500 hover:shadow-xl w-full aspect-square object-cover"
-        />
-      ) : (
-        <button className="w-full aspect-square bg-gradient-to-tr to-purple-500 from-cyan-500 rounded-3xl transition-all duration-700"></button>
-      )}
+      <img
+        src={image}
+        className="rounded-3xl bg-gradient-to-tr to-purple-500 from-cyan-500 hover:p-1 transition-all duration-500 hover:shadow-xl w-full aspect-square object-cover"
+      />
       <p className="text-center font-semibold mt-4">{board.name}</p>
     </Link>
   );
@@ -154,14 +155,20 @@ function Museboard({ board }: { board: TBoard }) {
 
 function MuseboardList({ address }: { address: string }) {
   const { query } = useBoardsQuery(address);
+  const { getBoards } = useMuseboard();
+  const onchainBoardsQuery = useQuery({ queryKey: ['onchain:boards', address], queryFn: () => getBoards(address) });
 
   if (query.isLoading) {
     return <p>Loading</p>
   }
 
+  if (onchainBoardsQuery.isLoading) {
+    return <p>Loading onchain boards</p>
+  }
+
   return (
     <>
-      {query.data && query.data.map((board: TBoard) => (
+      {onchainBoardsQuery.data && onchainBoardsQuery.data.map((board: TBoard) => (
         <Museboard key={board.id} board={board} />
       ))}
     </>

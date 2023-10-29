@@ -1,15 +1,46 @@
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-import { useBoardQuery } from "../../queries/boards";
 import { Loader } from "../../modals/AddToMuseboard";
 import { Masonry } from "masonic";
 import NFTCard from "../../common/NFTCard";
+import useMuseboard from "../../hooks/useMuseboard";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { create } from "blockies-ts";
 
 // const IPFS_GATEWAY = "https://2eff.lukso.dev/ipfs/";
 
+function BoardTokens({ boardId }: { boardId: string }) {
+  const { getTokens } = useMuseboard();
+  const query = useQuery({ queryKey: ['board:tokens', boardId], queryFn: () => getTokens(boardId as string) })
+
+  if (query.isLoading) {
+    return <Loader />
+  }
+  
+  return <div><Masonry
+    items={query.data.tokens}
+    columnGutter={8}
+    overscanBy={2}
+    maxColumnCount={5}
+    render={({ data }: { data: any }) =>{
+      return <NFTCard name="x" chain={data.chain} tokenId={Number(data.tokenId)} collection={data.collection} />
+    }}
+  /></div>
+}
+
 export default function BoardPage() {
   const { boardId } = useParams();
-  const query = useBoardQuery(boardId as string);
+  const { getMetadata } = useMuseboard();
+  const query = useQuery({ queryKey: ['board:metadata', boardId], queryFn: () => getMetadata(boardId as string) })
+  const [image, setImage] = useState<string|null>(null);
+  // const query = useBoardQuery(boardId as string);
+
+  useEffect(() => {
+    if (!query.data) { return; }
+  
+    setImage(create({ seed: `${query.data.owner}:${query.data.id}`, scale: 40, bgcolor: '#f1f1f1' }).toDataURL());
+  }, [query.data]);
 
   if (query.isLoading) {
     return <Loader />;
@@ -22,11 +53,11 @@ export default function BoardPage() {
           <div className="bg-slate-900 h-96 relative mb-48">
             <img
               className="absolute left-0 top-0.5 h-96 w-full object-cover opacity-30 z-0"
-              src={query.data?.image}
+              src={query.data?.image || image}
               alt="Board"
             />
             <div className="absolute top-16 left-0 right-0 h-80 z-10">
-            <div className="max-w-7xl mb-40 mx-auto flex flex-row space-x-3">
+            <div className="max-w-7xl px-8 mb-40 mx-auto flex flex-row space-x-3">
               <button
                 onClick={() => window.history.back()}
                 className="px-4 py-2 bg-gray-200 rounded-lg text-black"
@@ -38,11 +69,11 @@ export default function BoardPage() {
                 Share
               </button>
             </div>
-              <div className="flex flex-row space-x-8 max-w-7xl mx-auto">
+              <div className="flex flex-row space-x-8 max-w-7xl px-8 mx-auto">
                 <div className="min-w-fit">
                   <img
                     className="w-64 h-64 rounded-2xl border-4 border-white  object-cover object-center"
-                    src={query.data?.image}
+                    src={query.data?.image || image}
                     alt="Board"
                   />
                 </div>
@@ -88,16 +119,8 @@ export default function BoardPage() {
               </div>
             </div>
           </div>
-          <div className="max-w-7xl mx-auto">
-            { query.data && <Masonry
-              items={query.data.tokens}
-              columnGutter={8}
-              overscanBy={2}
-              maxColumnCount={5}
-              render={({ data }) =>{
-                return <NFTCard name="x" chain={data.chain} tokenId={Number(data.tokenId)} collection={data.collection} />
-              }}
-            /> }
+          <div className="max-w-7xl mx-auto px-8">
+            <BoardTokens boardId={boardId as string} />
           </div>
         </main>
       </div>

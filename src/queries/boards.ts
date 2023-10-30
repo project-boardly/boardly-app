@@ -94,13 +94,33 @@ function addTokenToBoard (boardId: BoardId, token: TToken) {
   return _board;
 }
 
+function removeTokenFromBoard (boardId: BoardId, token: TToken) {
+  const _board = getBoard(boardId);
+
+  if (!_board) {
+    throw new Error('Board does not exist');
+  }
+
+  const matchingToken = _board.tokens.find((t) => matchTokens(t, token));
+
+  if (!matchingToken) {
+    throw new Error('Token not present in board');
+  }
+  
+  _board.tokens = _board.tokens.filter((_target) => !matchTokens(_target, token));
+  localStorage.setItem(`board:${boardId}`, JSON.stringify(omit(_board, ['image'])));
+
+  return _board;
+}
+
 export function useBoardsQuery(address: string) {
   const query = useQuery({ queryKey: ['boards', address], queryFn: () => getBoards() || [] });
 
   return {
     query,
     addNew: (boardName: string, tokens: TToken[]) => createNew(address, boardName, tokens),
-    addTokenToBoard
+    addTokenToBoard,
+    removeTokenFromBoard
   }
 }
 

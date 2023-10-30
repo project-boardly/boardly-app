@@ -49,11 +49,13 @@ export function Loader() {
 function InlineMuseboard({
   board,
   addToBoard,
-  token
+  token,
+  removeFromBoard
 }: {
   board: TBoard;
   token: TToken;
   addToBoard: (boardId: string) => Promise<any>;
+  removeFromBoard: (boardId: string) => Promise<any>;
 }) {
   const { getTokens } = useMuseboard();
   const query = useQuery({
@@ -85,8 +87,8 @@ function InlineMuseboard({
 
   return (
     <a
-      className={`flex flex-row rounded-xl  w-full px-4 py-4 group ${tokenExists ? 'bg-gray-100' : 'hover:bg-gray-100 cursor-pointer' }`}
-      onClick={() => !query.isLoading && !tokenExists && addToBoard(board.id)}
+      className={`flex flex-row rounded-xl  w-full px-4 py-4 group cursor-pointer ${tokenExists ? 'bg-gray-100' : 'hover:bg-gray-100' }`}
+      onClick={() => !query.isLoading && (tokenExists ? removeFromBoard(board.id) :  addToBoard(board.id))}
     >
       <img className="inline rounded-xl mr-4 w-12 h-12" src={board.image || image} />
       <div className="flex flex-col grow">
@@ -97,13 +99,13 @@ function InlineMuseboard({
           </small>
         )}
       </div>
-      { tokenExists && <div className="text-center text-gray-600">
+      { tokenExists && <div className="text-center text-gray-600 group-hover:invisible group-hover:w-0">
         <CheckCircleIcon height={24} width={24} className="mx-auto"/>
         <small className="text-xs">Added</small>
       </div>}
-      { !tokenExists && <div className="text-center text-gray-600 invisible group-hover:visible my-auto">
-        <small className="text-xs">Add</small>
-      </div>}
+      <div className="text-center text-gray-600 invisible w-0 group-hover:w-auto group-hover:visible my-auto">
+        <small className="text-xs">{ tokenExists ? 'Remove' : 'Add' }</small>
+      </div>
     </a>
   );
 }
@@ -181,7 +183,7 @@ function InlineCreateNew({ create }: { create: (name: string) => void }) {
 const AddToMuseboard = NiceModal.create(() => {
   const { user, loading: userLoading } = useUser();
   const modal = useModal();
-  const { query, addNew, addTokenToBoard } = useBoardsQuery(
+  const { query, addNew, addTokenToBoard, removeTokenFromBoard } = useBoardsQuery(
     user?.uid as string
   );
   const { getBoards } = useMuseboard();
@@ -272,12 +274,45 @@ const AddToMuseboard = NiceModal.create(() => {
     }
   }
 
+  async function handleRemoveTokenFromBoard(boardId: string) {
+    setError(null);
+    setLoading({ status: 1, message: "Uploading to IPFS" });
+
+    try {
+      const _board = removeTokenFromBoard(boardId, modal.args as TToken);
+      const tokens = await upload({ tokens: _board.tokens });
+
+      setLoading({ status: 1, message: "Commiting changes to blockchain" });
+      const txn = sendTransaction(contract, "updateMetadata", [
+        "tokens",
+        boardId,
+        tokens.jsonurl,
+      ]);
+
+      toast.promise(txn, {
+        loading: "Preparing and sending transaction",
+        success: "Transaction sent",
+        error: "Unable to send transaction",
+      });
+
+      await txn;
+
+      modal.resolve({ boardId });
+      modal.hide();
+      query.refetch();
+    } catch (err: any) {
+      console.log(err);
+      setLoading({ status: 0, message: "Not Loading" });
+      setError(err.message);
+    }
+  }
+
   function renderContent() {
     if (userLoading) {
       return <p>Loading</p>
     }
 
-    if (!user && loading.status !== 0) {
+    if (loading.status !== 0) {
       return <div className="flex flex-col space-y-2 text-center my-2">
         <Loader />
         <p>{loading.message}</p>
@@ -313,6 +348,9 @@ const AddToMuseboard = NiceModal.create(() => {
                   token={modal.args as TToken}
                   addToBoard={(boardId) =>
                     handleAddTokenToBoard(boardId)
+                  }
+                  removeFromBoard={(boardId) => 
+                    handleRemoveTokenFromBoard(boardId)
                   }
                 />
               </li>

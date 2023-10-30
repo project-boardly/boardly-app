@@ -17,6 +17,7 @@ import { TBoard, useBoardsQuery } from "../../queries/boards";
 import { getAuth } from "firebase/auth";
 import useMuseboard from "../../hooks/useMuseboard";
 import { useModal } from "@ebay/nice-modal-react";
+import useFollowModule from "../../hooks/useFollowModule";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -67,14 +68,14 @@ function ProfileCard({ address }: { address: string }) {
             <h2 className="text-3xl font-extrabold">{query.data.name}</h2>
             <Address address={address} />
             <div className="flex row">
-              <div>
-                <span className="text-gray-400">Following</span>{" "}
+              {/* <div>
+                <span className="text-gray-400">Following Boards</span>{" "}
                 <span className="font-bold">1</span>
-              </div>
-              <div className="mx-4">
+              </div> */}
+              {/* <div className="mx-4">
                 <span className="text-gray-400">Followers</span>{" "}
                 <span className="font-bold">1</span>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -82,7 +83,7 @@ function ProfileCard({ address }: { address: string }) {
       <div className="py-4">
         <p className="text-gray-400">{query.data.description}</p>
       </div>
-      <button
+      {/* <button
         onClick={() => window.alert("Follow module is not live yet")}
         className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg"
       >
@@ -101,7 +102,7 @@ function ProfileCard({ address }: { address: string }) {
           />
         </svg>
         Follow
-      </button>
+      </button> */}
       {/* <button
           onClick={console.log}
           className="w-full bg-neutral-600 text-white font-bold py-2 rounded-xl shadow-lg"
@@ -177,6 +178,55 @@ function MuseboardList({ address }: { address: string }) {
     <>
       {onchainBoardsQuery.data && onchainBoardsQuery.data.map((board: TBoard) => (
         <Museboard key={board.id} board={board} />
+      ))}
+    </>
+  );
+}
+
+function MuseboardContainer({ boardId }: { boardId: string }) {
+  const { getMetadata } = useMuseboard();
+  const query = useQuery({
+    queryKey: ["board:metadata", boardId],
+    queryFn: () => getMetadata(boardId as string),
+  });
+  const [image, setImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!query.data) {
+      return;
+    }
+
+    setImage(
+      create({
+        seed: `${query.data.owner}:${query.data.id}`,
+        scale: 40,
+        bgcolor: "#f1f1f1",
+      }).toDataURL()
+    );
+  }, [query.data]);
+
+  if (query.isLoading) {
+    return <p>Loading</p>
+  }
+
+  return <Museboard board={Object.assign({ logo: image }, query.data)} />
+}
+
+function FollowingMuseboardList({ address }: { address: string }) {
+  const { getFollowingBoards } = useFollowModule();
+  const query = useQuery({
+    queryKey: ['profile', address, 'following-boards'],
+    queryFn: () => getFollowingBoards(address)
+  });
+
+  if (query.isLoading) {
+    return <p>Loading</p>
+  }
+
+  return (
+    <>
+      {query.data && query.data.map((boardId: string) => (
+        <MuseboardContainer key={boardId} boardId={boardId} />
       ))}
     </>
   );
@@ -278,7 +328,7 @@ export default function ProfilePage() {
                   </div>
                   <h4 className="text-gray-500 py-4">FOLLOWING</h4>
                   <div className="grid lg:grid-cols-5 gap-4">
-                    {/* <MuseboardList boards={profile.boards.following} /> */}
+                    <FollowingMuseboardList address={address as string} />
                   </div>
                 </section>
               )}

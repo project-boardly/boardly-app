@@ -53,14 +53,8 @@ export function useTransactionSender () {
   async function executeTransactionRequest (transactionReq: TransactionRequest) {
     const signer = await provider.getSigner();
 
-    toast.loading('sending transaction');
-
     try {
-      const txnResponse = await signer.sendTransaction(transactionReq);
-
-      toast.success('sent transaction');
-
-      return txnResponse
+      return signer.sendTransaction(transactionReq);
     }
     catch (_err) {
       const error =  parseTransactionError(_err);

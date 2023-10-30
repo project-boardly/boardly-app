@@ -8,9 +8,12 @@ import { useTransactionSender } from "../hooks/transactions";
 import { upload, uploadImage } from "../utils/ipfs";
 import toast from "react-hot-toast";
 import { TToken, useBoardsQuery } from "../queries/boards";
-import useUser from "../hooks/useUser";
+
+import safeGet from 'lodash/get';
 
 import { abi } from "museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json";
+
+import useUser from "../hooks/useUser";
 import { Loader } from "./AddToMuseboard";
 
 function CircleFileUpload({ fileUrl, onChange }: { fileUrl?: string, onChange: (x: any) => void }) {
@@ -58,10 +61,10 @@ function CircleFileUpload({ fileUrl, onChange }: { fileUrl?: string, onChange: (
 }
 
 function BoardForm({ initialValue, submitForm, onCancel }: { initialValue?: any, submitForm: any, onCancel: any }) {
-  const [title, setTitle] = useState(initialValue.name || '');
-  const [description, setDescription] = useState(initialValue.description || "");
+  const [title, setTitle] = useState(safeGet(initialValue, 'name', ''));
+  const [description, setDescription] = useState(safeGet(initialValue, 'description', ''));
   const [logo, setLogo] = useState(null);
-  const [enabled, setEnabled] = useState(initialValue.privateBoard || false)
+  const [enabled, setEnabled] = useState(safeGet(initialValue, 'privateBoard', false));
 
   console.log(initialValue);
 
@@ -192,9 +195,15 @@ const MuseboardModal = NiceModal.create(() => {
       modal.resolve({ boardId });
       modal.hide();
     } catch (err: any) {
-      console.log(err);
-      setLoading({ status: 0, message: "Not Loading" });
-      setError(err.message);
+      if (err.code === 'ACTION_REJECTED') {
+        setError('User rejected the transaction');
+      } else {
+        console.error(err);
+
+        setError('That did\'t go as expected. We\'ll take a look into this.');
+      }
+
+      setLoading({ status: 0, message: "Not Loading" });      
     }
   }
 
@@ -293,14 +302,14 @@ const MuseboardModal = NiceModal.create(() => {
                   as="h2"
                   className="text-2xl pl-4 font-medium leading-6 text-gray-900 text-center"
                 >
-                  Create new board
+                  { modal.args ? 'Update board' : 'Create new board' }
                 </Dialog.Title>
                 <Dialog.Description
                   as="p"
                   className="text-center px-8 mt-4 text-gray-400"
                 ></Dialog.Description>
                 {error && (
-                  <span className="px-2 py-4 border rounded-xl border-red-900 text-red-900 bg-red-200 w-full">
+                  <span className="px-2 py-4 border rounded-xl border-red-900 text-red-900 bg-red-200 block">
                     {error}
                   </span>
                 )}

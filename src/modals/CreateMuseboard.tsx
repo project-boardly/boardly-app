@@ -252,9 +252,9 @@ const MuseboardModal = NiceModal.create(() => {
 
       setLoading({ status: 0, message: "Not Loading" });
 
-      const boardId = addNew(title, [modal.args as TToken]);
+      // const boardId = addNew(title, [modal.args as TToken]);
 
-      modal.resolve({ boardId });
+      modal.resolve({ boardId: board.id });
       modal.hide();
     } catch (err: any) {
       console.log(err);

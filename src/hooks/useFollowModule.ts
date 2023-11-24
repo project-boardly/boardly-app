@@ -10,7 +10,7 @@ export default function useFollowModule(address: string) {
       .then(num => Number(num));
   }
 
-  async function isFollowing(identifier: string, follower: string, target: string = import.meta.env.VITE_MUSEBOARD_CONTRACT) {
+  async function isFollowing(identifier: string, follower: string, target: string) {
     const isFollowing = await contract
       .isFollowingTarget(target, identifier, follower);
 

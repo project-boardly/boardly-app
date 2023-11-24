@@ -80,7 +80,7 @@ function BoardActions({
   const query = useQuery({
     queryKey: ["board", boardId, "user", user?.uid, "following"],
     enabled: !!user,
-    queryFn: () => isFollowing(boardId, user?.uid as string),
+    queryFn: () => isFollowing(boardId, user?.uid as string, import.meta.env.VITE_MUSEBOARD_CONTRACT),
   });
   const { executeTransactionRequest } = useTransactionSender();
 

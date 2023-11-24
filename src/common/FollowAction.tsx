@@ -1,21 +1,19 @@
 import { useEffect, useState } from "react";
 
-import { getAddress, zeroPadValue } from "ethers";
+import { Contract, getAddress, zeroPadValue } from "ethers";
 import { useTransactionSender } from "../hooks/transactions";
 
-// import FollowModule from "museboard-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json";
+import FollowModule from "museboard-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json";
 
 import KeyManagerSchema from "@erc725/erc725.js/schemas/LSP6KeyManager.json";
 import LSP17ExtensionSchema from "@erc725/erc725.js/schemas/LSP17ContractExtension.json";
 import { useErc725 } from "../hooks/useErc725";
 import type { ERC725JSONSchema } from "@erc725/erc725.js";
 import useUniversalProfile from "../hooks/useUniversalProfile";
-
 import { encodeValueType } from "@erc725/erc725.js/build/main/src/lib/encoder";
+import useFollowModule from "../hooks/useFollowModule";
 
-const _FOLLOW_SYSTEM_ADDR = getAddress(
-  "0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb"
-);
+const _FOLLOW_SYSTEM_ADDR = getAddress(import.meta.env.VITE_UP_FOLLOW_SYSTEM);
 
 type ReadyToFollow = {
   canFollow: boolean;
@@ -43,18 +41,25 @@ export default function FollowAction({
   target: string;
 }) {
   const { contract } = useUniversalProfile(address);
+  const { isFollowing } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
   const erc725 = useErc725(
     address,
     KeyManagerSchema.concat(LSP17ExtensionSchema) as ERC725JSONSchema[]
   );
   const [loading, setLoading] = useState(true);
-  const { sendTransaction, getSigner } = useTransactionSender();
+  const { sendTransaction } = useTransactionSender();
   const [readyToFollow, setRTF] = useState<ReadyToFollow>();
-  const [isFollowing] = useState(false);
+  const [alreadyFollowing, setAf] = useState(false);
 
   useEffect(() => {
-    isReadyToFollow().then((rtfStatus: ReadyToFollow) => {
+    const targetAddr = zeroPadValue(target, 32);
+
+    Promise.all([
+      isReadyToFollow(),
+      isFollowing(targetAddr, address, _FOLLOW_SYSTEM_ADDR),
+    ]).then(([rtfStatus, _following]: [ReadyToFollow, boolean]) => {
       setRTF(rtfStatus);
+      setAf(_following);
       setLoading(false);
     });
   }, []);
@@ -63,11 +68,11 @@ export default function FollowAction({
     const [allowedKeys, permissions] = await erc725.fetchData([
       {
         keyName: "AddressPermissions:AllowedERC725YDataKeys:<address>",
-        dynamicKeyParts: "0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb",
+        dynamicKeyParts: _FOLLOW_SYSTEM_ADDR,
       },
       {
         keyName: "AddressPermissions:Permissions:<address>",
-        dynamicKeyParts: "0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb",
+        dynamicKeyParts: _FOLLOW_SYSTEM_ADDR,
       },
     ]);
 
@@ -87,8 +92,14 @@ export default function FollowAction({
 
     if (permissions.value) {
       status.permissions =
-        erc725.checkPermissions("SETDATA", permissions.value as string) ||
-        erc725.checkPermissions("SUPER_SETDATA", permissions.value as string);
+        erc725.checkPermissions(
+          ["SETDATA", "REENTRANCY"],
+          permissions.value as string
+        ) ||
+        erc725.checkPermissions(
+          ["SUPER_SETDATA", "REENTRANCY"],
+          permissions.value as string
+        );
     }
 
     status.startFollowingExtension =
@@ -132,77 +143,59 @@ export default function FollowAction({
 
     if (!readyToFollow.startFollowingExtension) {
       keys.push(_START_FOLLOWING_SELECTOR);
-      values.push("0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb");
+      values.push(_FOLLOW_SYSTEM_ADDR);
     }
 
     if (!readyToFollow.stopFollowingExtension) {
       keys.push(_STOP_FOLLOWING_SELECTOR);
-      values.push("0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb");
+      values.push(_FOLLOW_SYSTEM_ADDR);
     }
 
     keys.push(
       erc725.encodeKeyName(
         "AddressPermissions:Permissions:<address>",
-        "0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb"
+        _FOLLOW_SYSTEM_ADDR
       )
     );
-    values.push(erc725.encodePermissions({ SETDATA: true }));
+    values.push(erc725.encodePermissions({ SETDATA: true, REENTRANCY: true }));
 
     keys.push(
       erc725.encodeKeyName(
         "AddressPermissions:AllowedERC725YDataKeys:<address>",
-        "0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb"
+        _FOLLOW_SYSTEM_ADDR
       )
     );
     values.push(
       encodeValueType("bytes[CompactBytesArray]", _REQUIRED_DATA_KEYS)
     );
 
-    // sendTransaction(contract, 'setData', [keys[0], values[0]]);
-    console.log(keys[0], values[0]);
-    const signer = await getSigner();
-    (contract.connect(signer) as any).setData(keys[0], values[0]);
+    sendTransaction(contract, "setDataBatch", [keys, values]);
   }
 
   async function followProfile() {
-    const targetAddr = zeroPadValue(address, 32);
+    const targetAddr = zeroPadValue(target, 32);
 
-    // const upContract = new Contract(getAddress(user?.uid as string), UniversalProfile.abi, rpcProvider);
-    // const key = keccak256(toUtf8Bytes('hello'));
+    const followModuleContract = new Contract(address, FollowModule.abi);
 
-    // console.log(erc725.checkPermissions(['SETDATA'], data[3]));
-    // console.log(erc725.checkPermissions(['SUPER_SETDATA'], data[3]));
+    const data = followModuleContract.interface.encodeFunctionData(
+      "startFollowing",
+      [targetAddr]
+    );
 
-    // upContract.interface.encodeFunctionData('setData', [key, '0x']);
-    // const owner = await upContract.owner();
-    // const keyManager = new Contract(owner, KeyManager.abi, rpcProvider);
+    sendTransaction(contract, "execute", [0, address, 0, data]);
+  }
 
-    // const calldata = getCalldata(targetAddr, 'follow');
-    // const call = ethers.solidityPacked(['bytes','address','uint256'], [calldata, '0xc4cB530aDdd62FEb189c7832d29B03A1b9D2aCd1', 0n])
-    // const call = ethers.solidityPacked(['bytes','address','uint256'], [calldata, user?.uid, 0n]);
+  async function unfollowProfile() {
+    const targetAddr = zeroPadValue(target, 32);
 
-    // const calldata = contract.interface.encodeFunctionData('setData', ['0xeee78b4094da8601109600004d28340300000000000000000000000000000002', '0x']);
-    // sendTransaction(upContract, 'execute', [0, '0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb', 0, call]);
-    // console.log(calldata);
-    // sendTransaction(keyManager, 'execute', [calldata]);
+    const followModuleContract = new Contract(address, FollowModule.abi);
 
-    // executeTransactionRequest({
-    //   to: '0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb', // getAddress(user?.uid as string),
-    //   data: call
-    // }).catch(console.log);
+    const data = followModuleContract.interface.encodeFunctionData(
+      "stopFollowing",
+      [targetAddr]
+    );
 
-    // sendTransaction(upContract, 'setData', [key, '0x'])
-
-    // const signer = await getSigner();
-
-    // console.log(signer, key);
-    // console.log(await signer.signMessage('hello world'));
-
-    // (upContract.connect(signer) as any).setData(key, '0x');
-
-    // (upContract.connect(signer) as any).setData(key, key);
-
-    // (followModuleContract.connect(signer) as any).startFollowing(targetAddr);
+    sendTransaction(contract, "execute", [0, address, 0, data]);
   }
 
   if (loading) {
@@ -225,38 +218,40 @@ export default function FollowAction({
     );
   }
 
-  if (isFollowing) {
-    <button
-      onClick={console.log}
-      className="w-full bg-neutral-600 text-white font-bold py-2 rounded-xl shadow-lg"
-    >
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-6 h-6 inline mr-2"
+  if (alreadyFollowing) {
+    return (
+      <button
+        onClick={() => unfollowProfile()}
+        className="w-full bg-neutral-600 text-white font-bold py-2 rounded-xl shadow-lg"
       >
-        <g clipPath="url(#clip0_690_7820)">
-          <path
-            d="M13.5 8C13.5 5.79 11.71 4 9.5 4C7.29 4 5.5 5.79 5.5 8C5.5 10.21 7.29 12 9.5 12C11.71 12 13.5 10.21 13.5 8ZM11.5 8C11.5 9.1 10.6 10 9.5 10C8.4 10 7.5 9.1 7.5 8C7.5 6.9 8.4 6 9.5 6C10.6 6 11.5 6.9 11.5 8Z"
-            fill="white"
-          />
-          <path
-            d="M1.5 18V20H17.5V18C17.5 15.34 12.17 14 9.5 14C6.83 14 1.5 15.34 1.5 18ZM3.5 18C3.7 17.29 6.8 16 9.5 16C12.19 16 15.27 17.28 15.5 18H3.5Z"
-            fill="white"
-          />
-          <path d="M22.5 10H16.5V12H22.5V10Z" fill="white" />
-        </g>
-        <defs>
-          <clipPath id="clip0_690_7820">
-            <rect width="24" height="24" fill="white" />
-          </clipPath>
-        </defs>
-      </svg>
-      Unfollow
-    </button>;
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-6 h-6 inline mr-2"
+        >
+          <g clipPath="url(#clip0_690_7820)">
+            <path
+              d="M13.5 8C13.5 5.79 11.71 4 9.5 4C7.29 4 5.5 5.79 5.5 8C5.5 10.21 7.29 12 9.5 12C11.71 12 13.5 10.21 13.5 8ZM11.5 8C11.5 9.1 10.6 10 9.5 10C8.4 10 7.5 9.1 7.5 8C7.5 6.9 8.4 6 9.5 6C10.6 6 11.5 6.9 11.5 8Z"
+              fill="white"
+            />
+            <path
+              d="M1.5 18V20H17.5V18C17.5 15.34 12.17 14 9.5 14C6.83 14 1.5 15.34 1.5 18ZM3.5 18C3.7 17.29 6.8 16 9.5 16C12.19 16 15.27 17.28 15.5 18H3.5Z"
+              fill="white"
+            />
+            <path d="M22.5 10H16.5V12H22.5V10Z" fill="white" />
+          </g>
+          <defs>
+            <clipPath id="clip0_690_7820">
+              <rect width="24" height="24" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+        Unfollow
+      </button>
+    );
   }
 
   return (

@@ -290,7 +290,7 @@ export default function ProfilePage() {
               {selected.name === "museboards" && (
                 <section id="owned-nfts">
                   <h4 className="text-gray-500 py-4">OWNED</h4>
-                  <div className="grid lg:grid-cols-5 gap-4">
+                  <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
                     {user?.uid === address && (
                       <div className="group transition-all duration-700">
                         <button
@@ -307,7 +307,7 @@ export default function ProfilePage() {
                     <MuseboardList address={address as string} />
                   </div>
                   <h4 className="text-gray-500 py-4">FOLLOWING</h4>
-                  <div className="grid lg:grid-cols-5 gap-4">
+                  <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
                     <FollowingMuseboardList address={address as string} />
                   </div>
                 </section>

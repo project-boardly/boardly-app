@@ -44,22 +44,36 @@ export function useTransactionSender () {
   async function sendTransaction (contract: Contract, functionName: string | FunctionFragment, args: unknown[]) {
     const signer = await provider.getSigner();
 
-    return contract.connect(signer).getFunction(functionName)(...args);
+    const txn = contract.connect(signer).getFunction(functionName)(...args);
+
+    toast.promise(txn, {
+      loading: 'Sending transaction',
+      error: 'Failed to send transaction',
+      success: 'Transaction Sent'
+    });
+
+    return txn;
   }
 
   async function executeTransactionRequest (transactionReq: TransactionRequest) {
     const signer = await provider.getSigner();
 
     try {
-      return signer.sendTransaction(transactionReq);
+      const txn = signer.sendTransaction(transactionReq);
+
+      toast.promise(txn, {
+        loading: 'Sending transaction',
+        error: 'Failed to send transaction',
+        success: 'Transaction Sent'
+      });
+  
+      return txn;
     }
     catch (_err) {
       const error = parseTransactionError(_err);
 
       console.log(_err);
-
       toast.error(`transaction failed: ${error.name}`);
-
       throw error;
     }
   }

@@ -5,6 +5,7 @@ import { Button } from './buttons';
 import { useConnectWallet } from '@web3-onboard/react';
 import { authenticate } from '../utils/siwe';
 import { BrowserProvider } from 'ethers';
+import toast from 'react-hot-toast';
 
 export function ShortAddress ({ address }: { address: string }) {
   return <a className="cursor-pointer inline" onClick={() => navigator.clipboard.writeText(address)}>
@@ -30,13 +31,15 @@ export function QueryResultView ({ query, element }: QueryResultViewType) {
 
 function copy (text: string) {
   navigator.clipboard.writeText(text)
+
+  toast.success('Address Copied');
 }
 
-export function Address({ address }: { address: string }) {
+export function Address({ address, className }: { address: string, className: string }) {
   return (
-      <p>
+      <p className={`group ${className} cursor-pointer`}>
         <span className="pr-2">{address.substring(0, 5)}...{address.substring(address.length - 5)}</span>
-        <button className="inline" onClick={() => copy(address)}><ClipboardDocumentListIcon className="h-5 w-5"/></button>
+        <button className="invisible group-hover:visible inline" onClick={() => copy(address)}><ClipboardDocumentListIcon className="h-5 w-5"/></button>
       </p>
   );
 }

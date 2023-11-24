@@ -37,6 +37,7 @@ function FollowInfo({ address }: { address: string }) {
     following: 0,
     followers: 0
   });
+  const modal = useModal('list-following');
 
   useEffect(() => {
     const identifier = zeroPadValue(address, 32);
@@ -53,14 +54,14 @@ function FollowInfo({ address }: { address: string }) {
   }, []);
 
   return <div className="flex row">
-    <div>
+    <a onClick={() => modal.show({ address })}>
       <span className="text-gray-400">Following</span>{" "}
       <span className="font-bold">{stats.following}</span>
-    </div>
-    <div className="mx-4">
+    </a>
+    <a className="mx-4">
       <span className="text-gray-400">Followers</span>{" "}
       <span className="font-bold">{stats.followers}</span>
-    </div>
+    </a>
   </div>
 }
 
@@ -94,7 +95,7 @@ function ProfileCard({ address }: { address: string }) {
         <div className="grow">
           <div className="px-4">
             <h2 className="text-3xl font-extrabold">{query.data.name}</h2>
-            <Address address={address} />
+            <Address address={address} className="" />
             <FollowInfo address={address} />
           </div>
         </div>

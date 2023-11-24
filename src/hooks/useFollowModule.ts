@@ -14,8 +14,6 @@ export default function useFollowModule(address: string) {
     const isFollowing = await contract
       .isFollowingTarget(target, identifier, follower);
 
-    console.log('following', isFollowing);
-
     return isFollowing;
   }
 

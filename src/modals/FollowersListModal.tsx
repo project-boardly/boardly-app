@@ -2,34 +2,22 @@ import { Fragment } from "react";
 import { Transition, Dialog } from "@headlessui/react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { Loader } from "./AddToMuseboard";
-import { useErc725 } from "../hooks/useErc725";
 import { useQuery } from "@tanstack/react-query";
-import type { ERC725JSONSchema } from "@erc725/erc725.js";
 import ProfilesList from "../common/ProfilesList";
+import useFollowModule from "../hooks/useFollowModule";
 
-const schema: ERC725JSONSchema[] = [
-  {
-    name: "FollowingProfiles[]",
-    key: "0xd62c218b4cee2c6cd2453415e67c5ffaa3220349ed84a836e45f1fc38c24f476",
-    keyType: "Array",
-    valueType: "address",
-    valueContent: "Address",
-  },
-];
-
-type FollowingListModalArgs = {
-  address: string;
+type FollowerListModalArgs = {
+  identifier: string;
+  target: string;
 };
 
-const FollowingListModal = NiceModal.create(() => {
+const FollowersListModal = NiceModal.create(() => {
   const modal = useModal();
-  const { address } = modal.args as FollowingListModalArgs;
-  const erc725 = useErc725(address, schema);
+  const { identifier, target } = modal.args as FollowerListModalArgs;
+  const { getFollowersList } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
   const query = useQuery({
-    queryKey: ["following-profiles", address],
-    queryFn: () => {
-      return erc725.fetchData("FollowingProfiles[]").then((data) => data.value);
-    },
+    queryKey: ["followers-profiles", identifier],
+    queryFn: () => getFollowersList(identifier, target),
   });
 
   return (
@@ -63,13 +51,13 @@ const FollowingListModal = NiceModal.create(() => {
                   as="h2"
                   className="text-2xl pl-4 font-medium leading-6 text-gray-900 text-center"
                 >
-                  Following
+                  Followers
                 </Dialog.Title>
                 <Dialog.Description
                   as="p"
                   className="text-center px-8 mt-4 text-gray-400"
                 ></Dialog.Description>
-                { query.isLoading ? <Loader/> : <ProfilesList profiles={query.data as string[]} /> }
+                { query.isLoading ? <Loader/> : <ProfilesList profiles={query.data as string[]}/> }
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -79,4 +67,4 @@ const FollowingListModal = NiceModal.create(() => {
   );
 });
 
-export default FollowingListModal;
+export default FollowersListModal;

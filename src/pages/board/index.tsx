@@ -1,24 +1,24 @@
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { Loader } from "../../modals/AddToMuseboard";
 import { Masonry } from "masonic";
-import NFTCard from "../../common/NFTCard";
-import useMuseboard from "../../hooks/useMuseboard";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+
 import { create } from "blockies-ts";
-import useUser from "../../hooks/useUser";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
+
 import { useModal } from "@ebay/nice-modal-react";
-import { useContract } from "../../hooks/useContract";
+import toast from "react-hot-toast";
 
-// const IPFS_GATEWAY = "https://2eff.lukso.dev/ipfs/";
+import NFTCard from "../../common/NFTCard";
+import { ConnectWallet } from "../../common/components";
 
-import { abi } from "museboard-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json";
+import { Loader } from "../../modals/AddToMuseboard";
+
+import useMuseboard from "../../hooks/useMuseboard";
+import useUser from "../../hooks/useUser";
 import useFollowModule from "../../hooks/useFollowModule";
 import { useTransactionSender } from "../../hooks/transactions";
-import toast from "react-hot-toast";
-import { ConnectWallet } from "../../common/components";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -199,16 +199,20 @@ function BoardActions({
 
 function Followers({ identifier }: { identifier: string }) {
   const { getFollowersCount } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
+  const followersModal = useModal("list-followers");
   const query = useQuery({
     queryKey: ["board:metadata:followers-count", identifier],
-    queryFn: () => getFollowersCount(identifier),
+    queryFn: () => getFollowersCount(identifier, import.meta.env.VITE_MUSEBOARD_CONTRACT),
   });
 
   if (query.isLoading) {
     return <p>...</p>;
   }
 
-  return <p>{query.data} followers</p>;
+  return <a className="cursor-pointer" onClick={() => followersModal.show({
+    identifier,
+    target: import.meta.env.VITE_MUSEBOARD_CONTRACT
+  })}>{query.data} followers</a>;
 }
 
 export default function BoardPage() {

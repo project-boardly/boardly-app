@@ -31,38 +31,51 @@ const _FOLLOWING_ARRAY_KEY =
   "0xd62c218b4cee2c6cd2453415e67c5ffaa3220349ed84a836e45f1fc38c24f476";
 
 function FollowInfo({ address }: { address: string }) {
-  const { getFollowersCount } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
+  const { getFollowersCount } = useFollowModule(
+    import.meta.env.VITE_FOLLOW_MODULE
+  );
   const { contract } = useUniversalProfile(address);
   const [stats, setStats] = useState({
     following: 0,
-    followers: 0
+    followers: 0,
   });
-  const modal = useModal('list-following');
+  const followingModal = useModal("list-following");
+  const followersModal = useModal("list-followers");
 
   useEffect(() => {
     const identifier = zeroPadValue(address, 32);
 
     Promise.all([
       getFollowersCount(identifier, import.meta.env.VITE_UP_FOLLOW_SYSTEM),
-      contract.getData(_FOLLOWING_ARRAY_KEY)
+      contract.getData(_FOLLOWING_ARRAY_KEY),
     ]).then(([followers, following]) => {
       setStats({
         followers,
-        following: following === '0x' ? 0 : Number(BigInt(following))
+        following: following === "0x" ? 0 : Number(BigInt(following)),
       });
     });
   }, []);
 
-  return <div className="flex row">
-    <a onClick={() => modal.show({ address })}>
-      <span className="text-gray-400">Following</span>{" "}
-      <span className="font-bold">{stats.following}</span>
-    </a>
-    <a className="mx-4">
-      <span className="text-gray-400">Followers</span>{" "}
-      <span className="font-bold">{stats.followers}</span>
-    </a>
-  </div>
+  return (
+    <div className="flex row">
+      <a onClick={() => followingModal.show({ address })}>
+        <span className="text-gray-400">Following</span>{" "}
+        <span className="font-bold">{stats.following}</span>
+      </a>
+      <a
+        className="mx-4"
+        onClick={() =>
+          followersModal.show({
+            identifier: zeroPadValue(address, 32),
+            target: import.meta.env.VITE_UP_FOLLOW_SYSTEM,
+          })
+        }
+      >
+        <span className="text-gray-400">Followers</span>{" "}
+        <span className="font-bold">{stats.followers}</span>
+      </a>
+    </div>
+  );
 }
 
 function ProfileCard({ address }: { address: string }) {
@@ -120,8 +133,7 @@ function Museboard({ board }: { board: TBoard }) {
           bgcolor: "#f1f1f1",
           // spotcolor: 'rgba(0,0,0,0.6)',
           // color: 'rgba(0,0,0, 0.4)'
-        })
-        .toDataURL()
+        }).toDataURL()
   );
 
   return (
@@ -196,7 +208,8 @@ function FollowingMuseboardList({ address }: { address: string }) {
   );
   const query = useQuery({
     queryKey: ["profile", address, "following-boards"],
-    queryFn: () => getFollowingList(address),
+    queryFn: () =>
+      getFollowingList(address, import.meta.env.VITE_MUSEBOARD_CONTRACT),
   });
 
   if (query.isLoading) {

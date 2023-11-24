@@ -1,10 +1,11 @@
 import { abi } from 'museboard-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json';
 import { useContract } from './useContract';
+import { getAddress } from 'ethers';
 
 export default function useFollowModule(address: string) {
   const contract = useContract(address, abi);
 
-  function getFollowersCount(identifier: string, target: string = import.meta.env.VITE_MUSEBOARD_CONTRACT) {
+  function getFollowersCount(identifier: string, target: string) {
     return contract
       .followersCount(target, identifier)
       .then(num => Number(num));
@@ -17,11 +18,21 @@ export default function useFollowModule(address: string) {
     return isFollowing;
   }
 
-  async function getFollowingList(follower: string, target: string = import.meta.env.VITE_MUSEBOARD_CONTRACT) {
+  async function getFollowingList(follower: string, target: string) {
     const count = await contract.followingCount(follower, target);
 
     return Promise.all(Array(Number(count)).fill(1).map((_, idx) => { 
       return contract.followingAt(follower, target, idx)
+    }));
+  }
+
+  async function getFollowersList(identifier: string, target: string) {
+    console.log('get followers list');
+
+    const count = await contract.followersCount(getAddress(target), identifier);    
+
+    return Promise.all(Array(Number(count)).fill(1).map((_, idx) => { 
+      return contract.followerAtIndex(getAddress(target), identifier, idx)
     }));
   }
 
@@ -33,5 +44,5 @@ export default function useFollowModule(address: string) {
     return contract.interface.encodeFunctionData('startFollowing', [boardId]);
   }
 
-  return { contract, getFollowersCount, getCalldata, isFollowing, getFollowingList }
+  return { contract, getFollowersCount, getCalldata, isFollowing, getFollowingList, getFollowersList }
 }

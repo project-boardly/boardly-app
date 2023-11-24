@@ -5,10 +5,12 @@ import Router from './Router';
 import AddToMuseboard from './modals/AddToMuseboard';
 import CreateMuseboard from './modals/CreateMuseboard';
 import FollowingListModal from './modals/FollowingListModal';
+import FollowersListModal from './modals/FollowersListModal';
 
 NiceModal.register('add-to-museboard', AddToMuseboard);
 NiceModal.register('create-museboard', CreateMuseboard);
 NiceModal.register('list-following', FollowingListModal);
+NiceModal.register('list-followers', FollowersListModal);
 
 function App() {
   return (

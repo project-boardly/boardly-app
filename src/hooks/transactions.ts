@@ -22,9 +22,6 @@ function parseTransactionError (error: any) {
     return error;
   }
 
-  // const parsedError = ExtensionInterface.parseError(error.data);
-  // const placeholderError = PlaceholderInterface.parseError(error.data);
-  // const assetError = AssetInterface.parseError(error.data);
   // const profileError = ProfileInterface.parseError(error.data);
   // const keyManagerError = KeyManagerInterfae.parseError(error.data);
 
@@ -57,7 +54,9 @@ export function useTransactionSender () {
       return signer.sendTransaction(transactionReq);
     }
     catch (_err) {
-      const error =  parseTransactionError(_err);
+      const error = parseTransactionError(_err);
+
+      console.log(_err);
 
       toast.error(`transaction failed: ${error.name}`);
 
@@ -65,7 +64,7 @@ export function useTransactionSender () {
     }
   }
 
-  return { sendTransaction, executeTransactionRequest }
+  return { sendTransaction, executeTransactionRequest, getSigner: () => provider.getSigner() }
 }
 
 export function useTransactionWatcher (txnHash: string) {

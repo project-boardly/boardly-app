@@ -7,7 +7,7 @@ export function useErc725 (address: string, schema: ERC725JSONSchema[]) {
   return new ERC725(
     schema,
     address,
-    window.ethereum,
+    window.lukso,
     config
   );
 }

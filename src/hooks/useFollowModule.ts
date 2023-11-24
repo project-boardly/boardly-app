@@ -1,9 +1,8 @@
 import { abi } from 'museboard-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json';
 import { useContract } from './useContract';
 
-
-export default function useFollowModule() {
-  const contract = useContract(import.meta.env.VITE_FOLLOW_MODULE, abi);
+export default function useFollowModule(address: string) {
+  const contract = useContract(address, abi);
 
   function getFollowersCount(identifier: string) {
     return contract

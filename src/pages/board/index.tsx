@@ -76,7 +76,7 @@ function BoardActions({
   toggleSettings: () => void;
 }) {
   const { user, loading } = useUser();
-  const { contract, isFollowingBoard, getCalldata } = useFollowModule();
+  const { contract, isFollowingBoard, getCalldata } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
   const query = useQuery({
     queryKey: ["board", boardId, "user", user?.uid, "following"],
     enabled: !!user,
@@ -198,7 +198,7 @@ function BoardActions({
 }
 
 function Followers({ identifier }: { identifier: string }) {
-  const { getFollowersCount } = useFollowModule();
+  const { getFollowersCount } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
   const query = useQuery({
     queryKey: ["board:metadata:followers-count", identifier],
     queryFn: () => getFollowersCount(identifier),

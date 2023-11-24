@@ -49,6 +49,7 @@ export default function useUniversalProfile(address: string) {
   const erc725 = useErc725(address, schema);
 
   return {
+    contract,
     isUniversalProfile: () => contract.supportsInterface(INTERFACE_IDS.LSP0ERC725Account),
     getProfileData: () => fetchProfileData(erc725).then((data) => data.value.LSP3Profile),
     fetch: function (type: string) {

@@ -2,28 +2,32 @@ import { Fragment, useEffect, useState } from "react";
 
 import safeGet from "lodash/get";
 
-import * as blockies from 'blockies-ts';
-
 import { Listbox, Transition } from "@headlessui/react";
+import { PlusCircleIcon } from "@heroicons/react/24/outline";
 
 import { Link, useParams } from "react-router-dom";
-import { PlusCircleIcon } from "@heroicons/react/24/outline";
-// import { Loader } from "../../modals/AddToMuseboard";
 import { useQuery } from "@tanstack/react-query";
 import { create } from "blockies-ts";
-import { Address } from "../../common/components";
-import { TBoard, useBoardsQuery } from "../../queries/boards";
 import { getAuth } from "firebase/auth";
-import useMuseboard from "../../hooks/useMuseboard";
 import { useModal } from "@ebay/nice-modal-react";
-import useFollowModule from "../../hooks/useFollowModule";
+import { getAddress } from "ethers";
+
+import FollowAction from "../../common/FollowAction";
+import { Address } from "../../common/components";
+
+import { TBoard, useBoardsQuery } from "../../queries/boards";
 import { useProfileQuery } from "../../queries/profiles";
+
+import useMuseboard from "../../hooks/useMuseboard";
+import useFollowModule from "../../hooks/useFollowModule";
+import useUser from "../../hooks/useUser";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
 }
 
 function ProfileCard({ address }: { address: string }) {
+  const { user, loading: authUserLoading } = useUser();
   const { query } = useProfileQuery(address);
 
   if (query.isLoading) {
@@ -69,26 +73,9 @@ function ProfileCard({ address }: { address: string }) {
       <div className="py-4">
         <p className="text-gray-400">{query.data.description}</p>
       </div>
-      {/* <button
-        onClick={() => window.alert("Follow module is not live yet")}
-        className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-6 h-6 inline mr-2"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM4 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 0110.374 21c-2.331 0-4.512-.645-6.374-1.766z"
-          />
-        </svg>
-        Follow
-      </button> */}
+      {!authUserLoading && user && user.uid !== address && (
+        <FollowAction address={getAddress(user.uid)} target={address} />
+      )}
       {/* <button
           onClick={console.log}
           className="w-full bg-neutral-600 text-white font-bold py-2 rounded-xl shadow-lg"
@@ -125,19 +112,21 @@ function ProfileCard({ address }: { address: string }) {
 }
 
 function Museboard({ board }: { board: TBoard }) {
-  const [image] = useState(board.logo ? ipfsUrl(board.logo) : blockies.create({
-    seed: `${board?.owner}:${board.id}`,
-    scale: 40,
-    bgcolor: '#f1f1f1',
-    // spotcolor: 'rgba(0,0,0,0.6)',
-    // color: 'rgba(0,0,0, 0.4)'
-  }).toDataURL());
+  const [image] = useState(
+    board.logo
+      ? ipfsUrl(board.logo)
+      : create({
+          seed: `${board?.owner}:${board.id}`,
+          scale: 40,
+          bgcolor: "#f1f1f1",
+          // spotcolor: 'rgba(0,0,0,0.6)',
+          // color: 'rgba(0,0,0, 0.4)'
+        })
+        .toDataURL()
+  );
 
   return (
-    <Link
-      to={`/board/${board.id}`}
-      className="group aspect-square"
-    >
+    <Link to={`/board/${board.id}`} className="group aspect-square">
       <img
         src={image}
         className="rounded-3xl bg-gradient-to-tr to-purple-500 from-cyan-500 hover:p-1 transition-all duration-500 hover:shadow-xl w-full aspect-square object-cover"
@@ -150,21 +139,25 @@ function Museboard({ board }: { board: TBoard }) {
 function MuseboardList({ address }: { address: string }) {
   const { query } = useBoardsQuery(address);
   const { getBoards } = useMuseboard();
-  const onchainBoardsQuery = useQuery({ queryKey: ['onchain:boards', address], queryFn: () => getBoards(address) });
+  const onchainBoardsQuery = useQuery({
+    queryKey: ["onchain:boards", address],
+    queryFn: () => getBoards(address),
+  });
 
   if (query.isLoading) {
-    return <p>Loading</p>
+    return <p>Loading</p>;
   }
 
   if (onchainBoardsQuery.isLoading) {
-    return <p>Loading onchain boards</p>
+    return <p>Loading onchain boards</p>;
   }
 
   return (
     <>
-      {onchainBoardsQuery.data && onchainBoardsQuery.data.map((board: TBoard) => (
-        <Museboard key={board.id} board={board} />
-      ))}
+      {onchainBoardsQuery.data &&
+        onchainBoardsQuery.data.map((board: TBoard) => (
+          <Museboard key={board.id} board={board} />
+        ))}
     </>
   );
 }
@@ -192,28 +185,31 @@ function MuseboardContainer({ boardId }: { boardId: string }) {
   }, [query.data]);
 
   if (query.isLoading) {
-    return <p>Loading</p>
+    return <p>Loading</p>;
   }
 
-  return <Museboard board={Object.assign({ logo: image }, query.data)} />
+  return <Museboard board={Object.assign({ logo: image }, query.data)} />;
 }
 
 function FollowingMuseboardList({ address }: { address: string }) {
-  const { getFollowingBoards } = useFollowModule();
+  const { getFollowingBoards } = useFollowModule(
+    import.meta.env.VITE_FOLLOW_MODULE
+  );
   const query = useQuery({
-    queryKey: ['profile', address, 'following-boards'],
-    queryFn: () => getFollowingBoards(address)
+    queryKey: ["profile", address, "following-boards"],
+    queryFn: () => getFollowingBoards(address),
   });
 
   if (query.isLoading) {
-    return <p>Loading</p>
+    return <p>Loading</p>;
   }
 
   return (
     <>
-      {query.data && query.data.map((boardId: string) => (
-        <MuseboardContainer key={boardId} boardId={boardId} />
-      ))}
+      {query.data &&
+        query.data.map((boardId: string) => (
+          <MuseboardContainer key={boardId} boardId={boardId} />
+        ))}
     </>
   );
 }
@@ -222,7 +218,7 @@ const actions = [{ name: "NFTs" }, { name: "museboards" }];
 
 export default function ProfilePage() {
   const user = getAuth().currentUser;
-  const newMuseboardModal = useModal('create-museboard')
+  const newMuseboardModal = useModal("create-museboard");
   const { address } = useParams();
   const [selected, setSelected] = useState(actions[1]);
 

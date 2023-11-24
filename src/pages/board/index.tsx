@@ -76,11 +76,11 @@ function BoardActions({
   toggleSettings: () => void;
 }) {
   const { user, loading } = useUser();
-  const { contract, isFollowingBoard, getCalldata } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
+  const { contract, isFollowing, getCalldata } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
   const query = useQuery({
     queryKey: ["board", boardId, "user", user?.uid, "following"],
     enabled: !!user,
-    queryFn: () => isFollowingBoard(boardId, user?.uid as string),
+    queryFn: () => isFollowing(boardId, user?.uid as string),
   });
   const { executeTransactionRequest } = useTransactionSender();
 

@@ -4,26 +4,26 @@ import { useContract } from './useContract';
 export default function useFollowModule(address: string) {
   const contract = useContract(address, abi);
 
-  function getFollowersCount(identifier: string) {
+  function getFollowersCount(identifier: string, target: string = import.meta.env.VITE_MUSEBOARD_CONTRACT) {
     return contract
-      .followersCount(import.meta.env.VITE_MUSEBOARD_CONTRACT, identifier)
+      .followersCount(target, identifier)
       .then(num => Number(num));
   }
 
-  async function isFollowingBoard(identifier: string, follower: string) {
+  async function isFollowing(identifier: string, follower: string, target: string = import.meta.env.VITE_MUSEBOARD_CONTRACT) {
     const isFollowing = await contract
-      .isFollowingTarget(import.meta.env.VITE_MUSEBOARD_CONTRACT, identifier, follower);
+      .isFollowingTarget(target, identifier, follower);
 
     console.log('following', isFollowing);
 
     return isFollowing;
   }
 
-  async function getFollowingBoards(follower: string) {
-    const count = await contract.followingCount(follower, import.meta.env.VITE_MUSEBOARD_CONTRACT);
+  async function getFollowingList(follower: string, target: string = import.meta.env.VITE_MUSEBOARD_CONTRACT) {
+    const count = await contract.followingCount(follower, target);
 
     return Promise.all(Array(Number(count)).fill(1).map((_, idx) => { 
-      return contract.followingAt(follower, import.meta.env.VITE_MUSEBOARD_CONTRACT, idx)
+      return contract.followingAt(follower, target, idx)
     }));
   }
 
@@ -35,5 +35,5 @@ export default function useFollowModule(address: string) {
     return contract.interface.encodeFunctionData('startFollowing', [boardId]);
   }
 
-  return { contract, getFollowersCount, getCalldata, isFollowingBoard, getFollowingBoards }
+  return { contract, getFollowersCount, getCalldata, isFollowing, getFollowingList }
 }

@@ -10,7 +10,7 @@ import { useQuery } from "@tanstack/react-query";
 import { create } from "blockies-ts";
 import { getAuth } from "firebase/auth";
 import { useModal } from "@ebay/nice-modal-react";
-import { getAddress } from "ethers";
+import { getAddress, zeroPadValue } from "ethers";
 
 import FollowAction from "../../common/FollowAction";
 import { Address } from "../../common/components";
@@ -21,9 +21,47 @@ import { useProfileQuery } from "../../queries/profiles";
 import useMuseboard from "../../hooks/useMuseboard";
 import useFollowModule from "../../hooks/useFollowModule";
 import useUser from "../../hooks/useUser";
+import useUniversalProfile from "../../hooks/useUniversalProfile";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+}
+
+const _FOLLOWING_ARRAY_KEY =
+  "0xd62c218b4cee2c6cd2453415e67c5ffaa3220349ed84a836e45f1fc38c24f476";
+
+function FollowInfo({ address }: { address: string }) {
+  const { getFollowersCount } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
+  const { contract } = useUniversalProfile(address);
+  const [stats, setStats] = useState({
+    following: 0,
+    followers: 0
+  });
+
+  useEffect(() => {
+    const identifier = zeroPadValue(address, 32);
+
+    Promise.all([
+      getFollowersCount(identifier, import.meta.env.VITE_UP_FOLLOW_SYSTEM),
+      contract.getData(_FOLLOWING_ARRAY_KEY)
+    ]).then(([followers, following]) => {
+      setStats({
+        followers,
+        following: following === '0x' ? 0 : Number(BigInt(following))
+      });
+    });
+  }, []);
+
+  return <div className="flex row">
+    <div>
+      <span className="text-gray-400">Following</span>{" "}
+      <span className="font-bold">{stats.following}</span>
+    </div>
+    <div className="mx-4">
+      <span className="text-gray-400">Followers</span>{" "}
+      <span className="font-bold">{stats.followers}</span>
+    </div>
+  </div>
 }
 
 function ProfileCard({ address }: { address: string }) {
@@ -57,16 +95,7 @@ function ProfileCard({ address }: { address: string }) {
           <div className="px-4">
             <h2 className="text-3xl font-extrabold">{query.data.name}</h2>
             <Address address={address} />
-            <div className="flex row">
-              {/* <div>
-                <span className="text-gray-400">Following Boards</span>{" "}
-                <span className="font-bold">1</span>
-              </div> */}
-              {/* <div className="mx-4">
-                <span className="text-gray-400">Followers</span>{" "}
-                <span className="font-bold">1</span>
-              </div> */}
-            </div>
+            <FollowInfo address={address} />
           </div>
         </div>
       </div>
@@ -76,37 +105,6 @@ function ProfileCard({ address }: { address: string }) {
       {!authUserLoading && user && user.uid !== address && (
         <FollowAction address={getAddress(user.uid)} target={address} />
       )}
-      {/* <button
-          onClick={console.log}
-          className="w-full bg-neutral-600 text-white font-bold py-2 rounded-xl shadow-lg"
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-6 h-6 inline mr-2"
-          >
-            <g clipPath="url(#clip0_690_7820)">
-              <path
-                d="M13.5 8C13.5 5.79 11.71 4 9.5 4C7.29 4 5.5 5.79 5.5 8C5.5 10.21 7.29 12 9.5 12C11.71 12 13.5 10.21 13.5 8ZM11.5 8C11.5 9.1 10.6 10 9.5 10C8.4 10 7.5 9.1 7.5 8C7.5 6.9 8.4 6 9.5 6C10.6 6 11.5 6.9 11.5 8Z"
-                fill="white"
-              />
-              <path
-                d="M1.5 18V20H17.5V18C17.5 15.34 12.17 14 9.5 14C6.83 14 1.5 15.34 1.5 18ZM3.5 18C3.7 17.29 6.8 16 9.5 16C12.19 16 15.27 17.28 15.5 18H3.5Z"
-                fill="white"
-              />
-              <path d="M22.5 10H16.5V12H22.5V10Z" fill="white" />
-            </g>
-            <defs>
-              <clipPath id="clip0_690_7820">
-                <rect width="24" height="24" fill="white" />
-              </clipPath>
-            </defs>
-          </svg>
-          Unfollow
-        </button> */}
     </div>
   );
 }
@@ -192,12 +190,12 @@ function MuseboardContainer({ boardId }: { boardId: string }) {
 }
 
 function FollowingMuseboardList({ address }: { address: string }) {
-  const { getFollowingBoards } = useFollowModule(
+  const { getFollowingList } = useFollowModule(
     import.meta.env.VITE_FOLLOW_MODULE
   );
   const query = useQuery({
     queryKey: ["profile", address, "following-boards"],
-    queryFn: () => getFollowingBoards(address),
+    queryFn: () => getFollowingList(address),
   });
 
   if (query.isLoading) {

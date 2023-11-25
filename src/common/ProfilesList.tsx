@@ -25,7 +25,7 @@ function InlineProfile({ address }: { address: string }) {
         />
       </div>
       <div className="grow py-4">
-        <p className="text-lg font-semibold align-middle h-max">{query.isLoading ? address : query.data.name}</p>
+        <p className="text-lg font-semibold align-middle h-max">{query.isLoading ? `${address.slice(0, 3)}...${address.slice(39)}` : query.data.name}</p>
       </div>
       <Address address={address} className="text-xs py-4"/>
     </div>

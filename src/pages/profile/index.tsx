@@ -60,12 +60,12 @@ function FollowInfo({ address }: { address: string }) {
 
   return (
     <div className="flex row">
-      <a onClick={() => followingModal.show({ address })}>
+      <a className="cursor-pointer" onClick={() => followingModal.show({ address })}>
         <span className="text-gray-400">Following</span>{" "}
         <span className="font-bold">{stats.following}</span>
       </a>
       <a
-        className="mx-4"
+        className="mx-4 cursor-pointer"
         onClick={() =>
           followersModal.show({
             identifier: zeroPadValue(address, 32),
@@ -88,7 +88,27 @@ function ProfileCard({ address }: { address: string }) {
   );
 
   if (query.isLoading) {
-    return <p>Loading</p>;
+    return <div
+      className="max-w-7xl mx-auto bg-cover bg-center shadow-2xl rounded-xl overflow-hidden"
+    >
+      <div className="backdrop-blur-md bg-black/50">
+        <div className="max-w-sm mx-auto py-10 text-white">
+          <div className="flex flex-row">
+            <div className="flex-none w-50 h-50 py-4 animate-pulse backdrop-blur-lg bg-white/30">
+            </div>
+            <div className="grow py-4 ">
+              <div className="px-4 animate-pulse backdrop-blur-lg bg-white/30">
+                <h2 className="text-3xl font-extrabold animate-pulse backdrop-blur-lg bg-white/30 w-full"></h2>
+                <Address address={address} className="" />
+              </div>
+            </div>
+          </div>
+          <div className="py-4 animate-pulse backdrop-blur-lg bg-white/30">
+            
+          </div>
+        </div>
+      </div>
+    </div>
   }
 
   if (!query.data) {

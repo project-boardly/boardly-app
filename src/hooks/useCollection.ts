@@ -2,6 +2,14 @@ import { Contract, JsonRpcProvider } from "ethers";
 
 import { abi } from 'museboard-contracts/artifacts/@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol/ERC721Enumerable.json';
 import ERC1155ABI from './ERC1155.json';
+import { useErc725 } from "./useErc725";
+
+import LSP4DigitalAsset from '@erc725/erc725.js/schemas/LSP4DigitalAsset.json'
+import { ERC725JSONSchema } from "@erc725/erc725.js";
+
+function ipfsUrl(url: string) {
+  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+}
 
 export const providers: any = {
   'ethereum': new JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/2eEiw8W63XB1bzIk-2XJHxPbZreVtM8V'),
@@ -12,9 +20,17 @@ export const providers: any = {
 export const ERC721 = abi;
 export const ERC1155 = ERC1155ABI;
 
-export function useCollection (chain: string, address: string) {
+export function useCollection (chain: string, address: string, standard?: string) {
   const provider = providers[chain];
   const collection = new Contract(address, abi, provider);
+
+  if (standard === 'LSP7') {
+    return LSP7CollectionUtils(chain, address);
+  }
+
+  if (standard === 'LSP8') {
+    return LSP8CollectionUtils(chain, address);
+  }
 
   async function fetchTokens(startAt = 0, pageSize = 20) {
     let count = 0,
@@ -63,8 +79,7 @@ export function useCollection (chain: string, address: string) {
       tokenUri = `http://localhost:3000/proxy?url=${encodeURIComponent(uri)}`;
     }
 
-    return fetch(tokenUri)
-     .then((res) => res.json())
+    return fetch(tokenUri).then((res) => res.json())
   }
 
   return {
@@ -72,5 +87,73 @@ export function useCollection (chain: string, address: string) {
     fetchMetadata,
     fetchMetadataByUri,
     contract: collection
+  };
+}
+
+function LSP7CollectionUtils(chain: string, address: string) {
+  const erc725 = useErc725(address, LSP4DigitalAsset as ERC725JSONSchema[])
+
+  async function fetchTokens(startAt = 0, pageSize = 20) {
+    return [];
+  }
+
+  async function fetchMetadata(tokenId: string) {
+    const [{value: name}, { value: collectionMetadata }] = await erc725.fetchData(['LSP4TokenName', 'LSP4Metadata']);
+
+    tokenId;
+    return {
+      name,
+      image: (collectionMetadata as any).LSP4Metadata.images[0][0].url
+    }
+  }
+
+  async function fetchMetadataByUri(uri: string) {
+    const [name, collectionMetadata] = await erc725.fetchData(['LSP4TokenName', 'LSP4Metadata']);
+
+    uri;
+    return {
+      name,
+      image: (collectionMetadata as any).LSP4Metadata.icon[0].url
+    }
+  }
+
+  return {
+    fetchTokens,
+    fetchMetadata,
+    fetchMetadataByUri
+  };
+}
+
+function LSP8CollectionUtils(chain: string, address: string) {
+  const erc725 = useErc725(address, LSP4DigitalAsset as ERC725JSONSchema[])
+
+  async function fetchTokens(startAt = 0, pageSize = 20) {
+    return { data: [], cursor: null };
+  }
+
+  async function fetchMetadata(tokenId: string) {
+    const [{value: name}, { value: collectionMetadata }] = await erc725.fetchData(['LSP4TokenName', 'LSP4Metadata']);
+
+    tokenId;
+    return {
+      name,
+      image: ipfsUrl((collectionMetadata as any).LSP4Metadata.images[0][0].url)
+    }
+  }
+
+  async function fetchMetadataByUri(uri: string) {
+    const [{value: name}, { value: collectionMetadata }] = await erc725.fetchData(['LSP4TokenName', 'LSP4Metadata']);
+
+    uri;
+    return {
+      name,
+      image: (collectionMetadata as any).LSP4Metadata.images[0][0].url
+    }
+  }
+
+  return {
+    fetchTokens,
+    fetchMetadata,
+    fetchMetadataByUri
   };
 }

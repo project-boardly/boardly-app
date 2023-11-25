@@ -9,16 +9,18 @@ export default function NFTCard({
   tokenId,
   metadataUrl,
   name,
-  addToMuseboard
+  addToMuseboard,
+  standard
 }: {
   chain: string,
   collection: string;
   tokenId: number;
   metadataUrl?: string;
   name: string;
+  standard?: string;
   addToMuseboard?: () => void
 }) {
-  const { fetchMetadataByUri, fetchMetadata } = useCollection(chain, collection);
+  const { fetchMetadataByUri, fetchMetadata } = useCollection(chain, collection, standard);
   const query = useQuery({
     queryKey: ["chain", chain, "collection", collection, "token", tokenId],
     cacheTime: 60 * 60 * 1000,

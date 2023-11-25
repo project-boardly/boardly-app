@@ -220,7 +220,7 @@ export default function FollowAction({
     return (
       <button
         onClick={() => unfollowProfile()}
-        className="w-full backdrop-blur-md bg-black/20 hover:bg-white/20 text-white font-bold py-2 rounded-xl shadow-lg"
+        className="w-full backdrop-blur-md bg-white/10 hover:bg-white/30 text-white font-bold py-2 rounded-xl shadow-lg"
       >
         <svg
           width="24"
@@ -255,7 +255,7 @@ export default function FollowAction({
   return (
     <button
       onClick={() => followProfile()}
-      className="w-full backdrop-blur-md bg-black/20  hover:bg-white/20 text-white font-bold py-2 rounded-xl shadow-lg"
+      className="w-full backdrop-blur-md  bg-white/20 hover:bg-white/50 text-white font-bold py-2 rounded-xl shadow-lg"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

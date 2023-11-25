@@ -16,6 +16,8 @@ import BoardPage from "./pages/board";
 import useMuseboard from "./hooks/useMuseboard";
 import { useEffect } from "react";
 import useUser from "./hooks/useUser";
+import Museboards from "./pages/profile/boards";
+import Assets from "./pages/profile/assets";
 
 const router = (queryClient: QueryClient) => createBrowserRouter(
   createRoutesFromElements(
@@ -23,7 +25,10 @@ const router = (queryClient: QueryClient) => createBrowserRouter(
       <Route path="/" element={<Explore />} />
       <Route path='/collection/:chain/:collection/token/:tokenId' element={<Token />} />
       <Route path='/collection/:chain/:address' element={<Collection />} />
-      <Route path='/profile/:address' element={<ProfilePage />} />
+      <Route path='/profile/:address' element={<ProfilePage />}>
+        <Route index={true} path='/profile/:address' element={<Museboards />}/>
+        <Route path='/profile/:address/assets' element={<Assets />}/>
+      </Route>
       <Route path='/board/:boardId' element={<BoardPage />} />
     </Route>
   )

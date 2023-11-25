@@ -12,6 +12,7 @@ import type { ERC725JSONSchema } from "@erc725/erc725.js";
 import useUniversalProfile from "../hooks/useUniversalProfile";
 import { encodeValueType } from "@erc725/erc725.js/build/main/src/lib/encoder";
 import useFollowModule from "../hooks/useFollowModule";
+import { useQuery } from "@tanstack/react-query";
 
 const _FOLLOW_SYSTEM_ADDR = getAddress(import.meta.env.VITE_UP_FOLLOW_SYSTEM);
 
@@ -40,6 +41,7 @@ export default function FollowAction({
   address: string;
   target: string;
 }) {
+  const targetAddr = zeroPadValue(target, 32);
   const { contract } = useUniversalProfile(address);
   const { isFollowing } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
   const erc725 = useErc725(
@@ -49,17 +51,11 @@ export default function FollowAction({
   const [loading, setLoading] = useState(true);
   const { sendTransaction } = useTransactionSender();
   const [readyToFollow, setRTF] = useState<ReadyToFollow>();
-  const [alreadyFollowing, setAf] = useState(false);
+  const query = useQuery({ queryKey: ['is-following', target], queryFn:() => isFollowing(targetAddr, address, _FOLLOW_SYSTEM_ADDR) })
 
   useEffect(() => {
-    const targetAddr = zeroPadValue(target, 32);
-
-    Promise.all([
-      isReadyToFollow(),
-      isFollowing(targetAddr, address, _FOLLOW_SYSTEM_ADDR),
-    ]).then(([rtfStatus, _following]: [ReadyToFollow, boolean]) => {
+    isReadyToFollow().then((rtfStatus: ReadyToFollow) => {
       setRTF(rtfStatus);
-      setAf(_following);
       setLoading(false);
     });
   }, []);
@@ -182,7 +178,8 @@ export default function FollowAction({
       [targetAddr]
     );
 
-    sendTransaction(contract, "execute", [0, address, 0, data]);
+    sendTransaction(contract, "execute", [0, address, 0, data])
+      .then(() => query.refetch());
   }
 
   async function unfollowProfile() {
@@ -195,10 +192,11 @@ export default function FollowAction({
       [targetAddr]
     );
 
-    sendTransaction(contract, "execute", [0, address, 0, data]);
+    sendTransaction(contract, "execute", [0, address, 0, data])
+      .then(() => query.refetch());
   }
 
-  if (loading) {
+  if (loading || query.isLoading) {
     return <></>;
   }
 
@@ -218,11 +216,11 @@ export default function FollowAction({
     );
   }
 
-  if (alreadyFollowing) {
+  if (query.data) {
     return (
       <button
         onClick={() => unfollowProfile()}
-        className="w-full bg-neutral-600 text-white font-bold py-2 rounded-xl shadow-lg"
+        className="w-full backdrop-blur-md bg-black/20 hover:bg-white/20 text-white font-bold py-2 rounded-xl shadow-lg"
       >
         <svg
           width="24"
@@ -257,7 +255,7 @@ export default function FollowAction({
   return (
     <button
       onClick={() => followProfile()}
-      className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg"
+      className="w-full backdrop-blur-md bg-black/20  hover:bg-white/20 text-white font-bold py-2 rounded-xl shadow-lg"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

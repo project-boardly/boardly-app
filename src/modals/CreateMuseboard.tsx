@@ -9,14 +9,20 @@ import { upload, uploadImage } from "../utils/ipfs";
 import toast from "react-hot-toast";
 import { TToken, useBoardsQuery } from "../queries/boards";
 
-import safeGet from 'lodash/get';
+import safeGet from "lodash/get";
 
 import { abi } from "museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json";
 
 import useUser from "../hooks/useUser";
 import { Loader } from "./AddToMuseboard";
 
-function CircleFileUpload({ fileUrl, onChange }: { fileUrl?: string, onChange: (x: any) => void }) {
+function CircleFileUpload({
+  fileUrl,
+  onChange,
+}: {
+  fileUrl?: string;
+  onChange: (x: any) => void;
+}) {
   const [uploaded, setUploaded] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [fileURL, setFileURL] = useState<string | null>(fileUrl || null);
@@ -29,7 +35,7 @@ function CircleFileUpload({ fileUrl, onChange }: { fileUrl?: string, onChange: (
 
   useEffect(() => {
     onChange(file);
-  }, [file])
+  }, [file]);
 
   return (
     <label
@@ -60,13 +66,23 @@ function CircleFileUpload({ fileUrl, onChange }: { fileUrl?: string, onChange: (
   );
 }
 
-function BoardForm({ initialValue, submitForm, onCancel }: { initialValue?: any, submitForm: any, onCancel: any }) {
-  const [title, setTitle] = useState(safeGet(initialValue, 'name', ''));
-  const [description, setDescription] = useState(safeGet(initialValue, 'description', ''));
+function BoardForm({
+  initialValue,
+  submitForm,
+  onCancel,
+}: {
+  initialValue?: any;
+  submitForm: any;
+  onCancel: any;
+}) {
+  const [title, setTitle] = useState(safeGet(initialValue, "name", ""));
+  const [description, setDescription] = useState(
+    safeGet(initialValue, "description", "")
+  );
   const [logo, setLogo] = useState(null);
-  const [enabled, setEnabled] = useState(safeGet(initialValue, 'privateBoard', false));
-
-  console.log(initialValue);
+  const [enabled, setEnabled] = useState(
+    safeGet(initialValue, "privateBoard", false)
+  );
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -75,71 +91,81 @@ function BoardForm({ initialValue, submitForm, onCancel }: { initialValue?: any,
   }
 
   function handleClose(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-    setTitle('');
-    setDescription('');
+    setTitle("");
+    setDescription("");
     setLogo(null);
 
     onCancel();
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="text-center mt-8 mb-8">
-        <CircleFileUpload onChange={setLogo} />
-      </div>
-      <div className="mt-4">
-        <span className="py-4">Title</span>
-        <input
-          type="text"
-          name="title"
-          placeholder="Title"
-          value={title}
-          className="w-full border border-gray-100 px-4 py-2 rounded-md shadow-md"
-          onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-      
-      <div className="mt-4">
-        <span className="py-2">Description</span>
-        <textarea
-          name="title"
-          placeholder="Optional"
-          className="w-full border border-gray-100 px-4 py-2 rounded-md shadow-md"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        ></textarea>
-      </div>
-      <div className="flex flex-row mt-4">
-        <Switch
-          checked={enabled}
-          onChange={setEnabled}
-          className={`${
-            enabled ? 'bg-blue-600' : 'bg-gray-200'
-          } relative inline-flex h-6 w-11 items-center rounded-full`}
-        >
-          <span className="sr-only">Private</span>
-          <span
-            className={`${
-              enabled ? 'translate-x-6' : 'translate-x-1'
-            } inline-block h-4 w-4 transform rounded-full bg-white`}
-          />
-        </Switch>
-        <div className="grow font-bold ml-4">
-          Hide from others
+    <>
+      <form onSubmit={handleSubmit}>
+        <div className="text-center mt-8 mb-8">
+          <CircleFileUpload onChange={setLogo} />
         </div>
-      </div>
+        <div className="mt-4">
+          <span className="py-4">Title</span>
+          <input
+            type="text"
+            name="title"
+            placeholder="Title"
+            value={title}
+            className="w-full border border-gray-100 px-4 py-2 rounded-md shadow-md"
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+
+        <div className="mt-4">
+          <span className="py-2">Description</span>
+          <textarea
+            name="title"
+            placeholder="Optional"
+            className="w-full border border-gray-100 px-4 py-2 rounded-md shadow-md"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          ></textarea>
+        </div>
+        <div className="flex flex-row mt-4">
+          <Switch
+            checked={enabled}
+            onChange={setEnabled}
+            className={`${
+              enabled ? "bg-blue-600" : "bg-gray-200"
+            } relative inline-flex h-6 w-11 items-center rounded-full`}
+          >
+            <span className="sr-only">Private</span>
+            <span
+              className={`${
+                enabled ? "translate-x-6" : "translate-x-1"
+              } inline-block h-4 w-4 transform rounded-full bg-white`}
+            />
+          </Switch>
+          <div className="grow font-bold ml-4">Hide from others</div>
+        </div>
+      </form>
       <div className="flex flex-row space-x-4 mt-10">
-        <button name="cancel" className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg" onClick={handleClose}>
+        <button
+          name="cancel"
+          className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg"
+          onClick={handleClose}
+        >
           Cancel
         </button>
-        <button type="submit" name="submit" className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg">
-          { initialValue ? 'Update' : 'Create' }
+        <button
+          type="submit"
+          name="submit"
+          className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg"
+          onClick={() =>
+            submitForm({ title, description, logo, privateBoard: enabled })
+          }
+        >
+          {initialValue ? "Update" : "Create"}
         </button>
       </div>
-    </form>
+    </>
   );
 }
-
 
 const MuseboardModal = NiceModal.create(() => {
   const { user } = useUser();
@@ -150,7 +176,17 @@ const MuseboardModal = NiceModal.create(() => {
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);
 
-  async function createNew({ title, description, logo, privateBoard }: { title: string, description: string, logo: File, privateBoard: boolean }) {
+  async function createNew({
+    title,
+    description,
+    logo,
+    privateBoard,
+  }: {
+    title: string;
+    description: string;
+    logo: File;
+    privateBoard: boolean;
+  }) {
     if (!user) {
       window.alert("Not authenticated");
 
@@ -160,7 +196,11 @@ const MuseboardModal = NiceModal.create(() => {
     setError(null);
 
     try {
-      const payload: Record<string, any> = { name: title, description, privateBoard };
+      const payload: Record<string, any> = {
+        name: title,
+        description,
+        privateBoard,
+      };
 
       if (logo) {
         setLoading({ status: 1, message: "Uploading logo to IPFS" });
@@ -175,10 +215,7 @@ const MuseboardModal = NiceModal.create(() => {
 
       setLoading({ status: 1, message: "Commiting changes to blockchain" });
 
-      const txn = sendTransaction(contract, "mint", [
-        metadata.jsonurl,
-        '0x'
-      ]);
+      const txn = sendTransaction(contract, "mint", [metadata.jsonurl, "0x"]);
 
       toast.promise(txn, {
         loading: "Preparing and sending transaction",
@@ -195,19 +232,31 @@ const MuseboardModal = NiceModal.create(() => {
       modal.resolve({ boardId });
       modal.hide();
     } catch (err: any) {
-      if (err.code === 'ACTION_REJECTED') {
-        setError('User rejected the transaction');
+      if (err.code === "ACTION_REJECTED") {
+        setError("User rejected the transaction");
       } else {
         console.error(err);
 
-        setError('That did\'t go as expected. We\'ll take a look into this.');
+        setError("That did't go as expected. We'll take a look into this.");
       }
 
-      setLoading({ status: 0, message: "Not Loading" });      
+      setLoading({ status: 0, message: "Not Loading" });
     }
   }
 
-  async function update({ board, title, description, logo, privateBoard }: { board: any, title: string, description: string, logo: File, privateBoard: boolean }) {
+  async function update({
+    board,
+    title,
+    description,
+    logo,
+    privateBoard,
+  }: {
+    board: any;
+    title: string;
+    description: string;
+    logo: File;
+    privateBoard: boolean;
+  }) {
     if (!user) {
       window.alert("Not authenticated");
 
@@ -237,9 +286,9 @@ const MuseboardModal = NiceModal.create(() => {
       setLoading({ status: 1, message: "Commiting changes to blockchain" });
 
       const txn = sendTransaction(contract, "updateMetadata", [
-        'metadata',
+        "metadata",
         board.id,
-        metadata.jsonurl
+        metadata.jsonurl,
       ]);
 
       toast.promise(txn, {
@@ -263,9 +312,25 @@ const MuseboardModal = NiceModal.create(() => {
     }
   }
 
-  function handleSubmit({ title, description, logo, privateBoard }: { title: string, description: string, logo: File, privateBoard: boolean }) {
+  function handleSubmit({
+    title,
+    description,
+    logo,
+    privateBoard,
+  }: {
+    title: string;
+    description: string;
+    logo: File;
+    privateBoard: boolean;
+  }) {
     if (modal.args) {
-      return update({ board: modal.args, title, description, logo, privateBoard });
+      return update({
+        board: modal.args,
+        title,
+        description,
+        logo,
+        privateBoard,
+      });
     }
 
     return createNew({ title, description, logo, privateBoard });
@@ -302,7 +367,7 @@ const MuseboardModal = NiceModal.create(() => {
                   as="h2"
                   className="text-2xl pl-4 font-medium leading-6 text-gray-900 text-center"
                 >
-                  { modal.args ? 'Update board' : 'Create new board' }
+                  {modal.args ? "Update board" : "Create new board"}
                 </Dialog.Title>
                 <Dialog.Description
                   as="p"
@@ -319,7 +384,13 @@ const MuseboardModal = NiceModal.create(() => {
                     <p>{loading.message}</p>
                   </div>
                 )}
-                { loading.status === 0 && <BoardForm initialValue={modal.args} submitForm={handleSubmit} onCancel={console.log} /> }
+                {loading.status === 0 && (
+                  <BoardForm
+                    initialValue={modal.args}
+                    submitForm={handleSubmit}
+                    onCancel={() => modal.hide()}
+                  />
+                )}
               </Dialog.Panel>
             </Transition.Child>
           </div>

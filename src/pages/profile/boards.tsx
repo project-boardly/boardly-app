@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { PlusCircleIcon } from "@heroicons/react/24/outline";
+import { LockClosedIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ function Museboard({ board }: { board: TBoard }) {
         src={image}
         className="rounded-3xl bg-gradient-to-tr to-purple-500 from-cyan-500 hover:p-1 transition-all duration-500 hover:shadow-xl w-full aspect-square object-cover"
       />
-      <p className="text-center font-semibold mt-4">{board.name}</p>
+      <p className="text-center font-semibold mt-4">{ board.privateBoard && <LockClosedIcon className="inline h-4 mr-2"/> }{board.name}</p>
     </Link>
   );
 }

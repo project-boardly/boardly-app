@@ -17,7 +17,7 @@ import useUser from "../hooks/useUser";
 import { Loader } from "./AddToMuseboard";
 import { getERC725 } from "../hooks/useErc725";
 import { ERC725JSONSchema } from "@erc725/erc725.js";
-import { getEncryptionWallet } from "../contexts/LitNetworkContext";
+import { getEncryptionWallet, getPrivateBoardConditions } from "../contexts/LitNetworkContext";
 import useUniversalProfile from "../hooks/useUniversalProfile";
 
 function CircleFileUpload({
@@ -283,6 +283,20 @@ const MuseboardModal = NiceModal.create(() => {
       payload.name = title;
       payload.description = description;
       payload.privateBoard = privateBoard;
+
+      if (privateBoard) {
+        const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
+        const wallet = await getEncryptionWallet();
+
+        const permissions = await erc.fetchData({ keyName: 'AddressPermissions:Permissions:<address>', dynamicKeyParts: wallet.address });
+        const requiredPermissions = erc.encodePermissions({ DECRYPT: true });
+        const permissionKey = erc.encodeKeyName('AddressPermissions:Permissions:<address>', wallet.address);
+
+        if (!permissions.value) {
+          setLoading({ status: 1, message: "Setting encryption keys on Profile" });
+          await sendTransaction(upContract, 'setData', [permissionKey, requiredPermissions]);
+        }
+      }
 
       if (logo) {
         setLoading({ status: 1, message: "Uploading logo to IPFS" });

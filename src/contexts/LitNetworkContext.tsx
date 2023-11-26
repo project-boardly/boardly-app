@@ -1,55 +1,71 @@
 import { createContext } from "react";
 
-import { Mnemonic, Wallet } from "ethers";
+import {
+  BrowserProvider,
+  Mnemonic,
+  Wallet,
+  keccak256,
+  verifyMessage,
+} from "ethers";
 
-import { LitNodeClient, encryptString, decryptToString } from "@lit-protocol/lit-node-client";
+import {
+  LitNodeClient,
+  encryptString,
+  decryptToString,
+} from "@lit-protocol/lit-node-client";
 
 import { createSiweMessage } from "../utils/siwe";
 
 const client = new LitNodeClient({
-  litNetwork: 'cayenne',
+  litNetwork: "cayenne",
 });
 
-const evmContractConditions = [
-  {
-    contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
-    functionName: "checkPermission",
-    functionParams: ["0xD6435952286512A7E77ffB101F8938ace0f42989", ":userAddress", "0x0000000000000000000000000000000000000000000000000000000000100000"],
-    functionAbi: {
-      constant: true,
-      inputs: [
-        {
-          name: "up",
-          type: "address"
-        },
-        {
-          name: "actor",
-          type: "address"
-        },
-        {
-          name: "permissions",
-          type: "bytes32"
-        }
+export function getPrivateBoardConditions (owner: string) {
+  return [
+    {
+      contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
+      functionName: "checkPermission",
+      functionParams: [
+        owner,
+        ":userAddress",
+        "0x0000000000000000000000000000000000000000000000000000000000100000",
       ],
-      name: "checkPermission",
-      outputs: [
-        {
-          name: "",
-          type: "bool"
-        }
-      ],
-      payable: false,
-      stateMutability: "view",
-      type: "function",
+      functionAbi: {
+        constant: true,
+        inputs: [
+          {
+            name: "up",
+            type: "address",
+          },
+          {
+            name: "actor",
+            type: "address",
+          },
+          {
+            name: "permissions",
+            type: "bytes32",
+          },
+        ],
+        name: "checkPermission",
+        outputs: [
+          {
+            name: "",
+            type: "bool",
+          },
+        ],
+        payable: false,
+        stateMutability: "view",
+        type: "function",
+      },
+      chain: "luksoTestnet",
+      returnValueTest: {
+        key: "",
+        comparator: "=",
+        value: "true",
+      },
     },
-    chain: "luksoTestnet",
-    returnValueTest: {
-      key: "",
-      comparator: "=",
-      value: "true",
-    },
-  },
-];
+  ];
+}
 
 const constructAuthSig = (sig: string, hashString: string, address: string) => {
   return {
@@ -58,11 +74,27 @@ const constructAuthSig = (sig: string, hashString: string, address: string) => {
     address,
     signedMessage: hashString,
   };
-}
+};
 
 export async function getEncryptionWallet() {
-  const nonce = localStorage.getItem('encryption-nonce');
-  const secret = Mnemonic.fromEntropy(nonce as string);
+  let nonce = localStorage.getItem("encryption-nonce");
+
+  if (!nonce) {
+    const provider = new BrowserProvider(window.lukso);
+    const signer = await provider.getSigner();
+    const message = "Generate encryption keys";
+
+    const sign = await signer.signMessage(message);
+    nonce = keccak256(sign);
+
+    localStorage.setItem("encryption-nonce", nonce);
+    localStorage.setItem(
+      "encryption-nonce-creator",
+      verifyMessage(message, sign)
+    );
+  }
+
+  const secret = Mnemonic.fromEntropy(nonce);
   const wallet = Wallet.fromPhrase(secret.phrase);
 
   return wallet;
@@ -76,32 +108,36 @@ async function getAuthSig() {
   return constructAuthSig(sig, siweMessage, wallet.address);
 }
 
-async function encrypt(message: string) {
+async function encrypt(message: string, conditions: any[]) {
   await client.connect();
   const authSig = await getAuthSig();
 
-  const { ciphertext, dataToEncryptHash } = await encryptString({
-    evmContractConditions,
-    authSig,
-    chain: 'luksoTestnet',
-    dataToEncrypt: message,
-  }, client);
+  const { ciphertext, dataToEncryptHash } = await encryptString(
+    {
+      evmContractConditions: conditions,
+      authSig,
+      chain: "luksoTestnet",
+      dataToEncrypt: message,
+    },
+    client
+  );
 
   return { ciphertext, hash: dataToEncryptHash };
 }
 
-async function decrypt(ciphertext: string, dataHash: string) {
+async function decrypt(ciphertext: string, dataHash: string, conditions: any[]) {
+  await client.connect();
   const authSig = await getAuthSig();
 
   const decryptedString = await decryptToString(
     {
-      evmContractConditions,
+      evmContractConditions: conditions,
       ciphertext,
       dataToEncryptHash: dataHash,
       authSig,
-      chain: 'luksoTestnet',
+      chain: "luksoTestnet",
     },
-    client,
+    client
   );
 
   return decryptedString;
@@ -110,9 +146,11 @@ async function decrypt(ciphertext: string, dataHash: string) {
 const LitNetworkContext = createContext({ client, encrypt, decrypt });
 
 export function LitProvider({ children }: any) {
-  return <LitNetworkContext.Provider value={{ client, encrypt, decrypt }}>
-    {children}
-  </LitNetworkContext.Provider>
+  return (
+    <LitNetworkContext.Provider value={{ client, encrypt, decrypt }}>
+      {children}
+    </LitNetworkContext.Provider>
+  );
 }
 
 export default LitNetworkContext;

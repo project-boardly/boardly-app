@@ -29,11 +29,37 @@ function BoardTokens({ boardId }: { boardId: string }) {
   const { getTokens } = useMuseboard();
   const query = useQuery({
     queryKey: ["board:tokens", boardId],
-    queryFn: () => getTokens(boardId as string),
+    queryFn: async () => {
+      let data: any = { tokens: [] };
+
+      try {
+        data = await getTokens(boardId as string)
+      } catch (error: any) {
+        console.log(error);
+
+        if (error.status === 401) {
+          data.encrypted = true;
+        }
+        else {
+          console.log(error);
+        }
+      }
+
+      return data;
+    },
   });
 
   if (query.isLoading) {
     return <Loader />;
+  }
+
+  if (query.data.encrypted) {
+    return (
+      <div className="w-full h-56 bg-gray-50 flex flex-col justify-center text-center text-gray-500 space-y-4">
+        <p className="text-xl block">{"This is a private board :("}</p>
+        {/* <p>Start adding NFTs to this museboard and inspire others!</p> */}
+      </div>
+    );
   }
 
   if (!query.data || query.data.tokens.length === 0) {
@@ -106,7 +132,7 @@ function BoardActions({
     }
   }
 
-  function unfollowMuseboard() {
+  async function unfollowMuseboard() {
     const calldata = getCalldata(boardId, 'unfollow');
 
     const txn = executeTransactionRequest({
@@ -119,6 +145,8 @@ function BoardActions({
       success: "Transaction sent",
       error: "Unable to send transaction",
     });
+
+    await txn;
   }
 
   if (loading) {
@@ -335,7 +363,8 @@ export default function BoardPage() {
             </div>
           </div>
           <div className="max-w-7xl mx-auto px-8">
-            <BoardTokens boardId={boardId as string} />
+            { (user || !query.data.privateBoard) && <BoardTokens boardId={boardId as string} /> }
+            { !user && query.data.privateBoard && <p>This is a private board.. connect wallet to check access</p>}
           </div>
         </main>
       </div>

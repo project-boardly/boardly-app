@@ -1,6 +1,7 @@
 import { useContract } from "./useContract";
 import { abi } from 'museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json';
 import { decodeKeyValue } from '@erc725/erc725.js/build/main/src/lib/utils';
+import useLitNetwork from "./useLitNetwork";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -8,6 +9,7 @@ function ipfsUrl(url: string) {
 
 export default function useMuseboard() {
   const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
+  const { decrypt } = useLitNetwork();
 
   async function getBoards(address: string) {
     const boardIds = await contract.tokenIdsOf(address);
@@ -37,11 +39,17 @@ export default function useMuseboard() {
 
       return fetch(ipfsUrl(data.url)).then(res => res.json());
     })
-    .then((data) => {
+    .then(async (data) => {
+      if (data.private) {
+        const tokens = await decrypt(data.ciphertext, data.hash, data.conditions);
+
+        data.tokens = JSON.parse(tokens);
+      }
+
       localStorage.setItem(`board:${boardId}`, JSON.stringify({ tokens: data.tokens }));
 
       return data;
-    });
+    })
   }
 
   return { contract, getBoards, getMetadata, getTokens };

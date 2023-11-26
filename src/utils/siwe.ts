@@ -2,7 +2,6 @@ import axios from "axios";
 
 import { generateNonce, SiweMessage } from 'siwe';
 import { getAuth, signInWithCustomToken } from "firebase/auth";
-import { keccak256 } from "ethers";
 
 export function createSiweMessage (address: string) {
   const domain = window.location.host;
@@ -24,8 +23,6 @@ export function createSiweMessage (address: string) {
 export async function authenticate (account: string, provider: any) {
   const message = createSiweMessage(account);
   const signature = await provider.send('eth_sign', [account, message])
-
-  localStorage.setItem('encryption-nonce', keccak256(signature));
 
   try {
     const response = await axios.post(`${import.meta.env.VITE_API_HOST}/siwe/verify`, { signature, message });

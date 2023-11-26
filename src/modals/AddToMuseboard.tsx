@@ -17,6 +17,8 @@ import { create } from "blockies-ts";
 import { ConnectWallet } from "../common/components";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import UserContext from "../contexts/UserContext";
+import useLitNetwork from "../hooks/useLitNetwork";
+import { getPrivateBoardConditions } from "../contexts/LitNetworkContext";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -50,7 +52,7 @@ function InlineMuseboard({
   board,
   addToBoard,
   token,
-  removeFromBoard
+  removeFromBoard,
 }: {
   board: TBoard;
   token: TToken;
@@ -64,7 +66,7 @@ function InlineMuseboard({
   });
   const [image] = useState(
     board.logo
-      ?  ipfsUrl(board.logo)
+      ? ipfsUrl(board.logo)
       : create({
           seed: `${board?.owner}:${board.id}`,
           scale: 40,
@@ -74,11 +76,15 @@ function InlineMuseboard({
   const [tokenExists, setTokenExists] = useState(false);
 
   useEffect(() => {
-    if (!query.data) { return; }
+    if (!query.data) {
+      return;
+    }
 
     const tokens = query.data.tokens;
 
-    const matchedToken = tokens.find((_target: TToken) => matchTokens(_target, token));
+    const matchedToken = tokens.find((_target: TToken) =>
+      matchTokens(_target, token)
+    );
 
     setTokenExists(!!matchedToken);
 
@@ -87,29 +93,41 @@ function InlineMuseboard({
 
   return (
     <a
-      className={`flex flex-row rounded-xl  w-full px-4 py-4 group cursor-pointer ${tokenExists ? 'bg-gray-100' : 'hover:bg-gray-100' }`}
-      onClick={() => !query.isLoading && (tokenExists ? removeFromBoard(board.id) :  addToBoard(board.id))}
+      className={`flex flex-row rounded-xl  w-full px-4 py-4 group cursor-pointer ${
+        tokenExists ? "bg-gray-100" : "hover:bg-gray-100"
+      }`}
+      onClick={() =>
+        !query.isLoading &&
+        (tokenExists ? removeFromBoard(board.id) : addToBoard(board.id))
+      }
     >
-      <img className="inline rounded-xl mr-4 w-12 h-12" src={board.image || image} />
+      <img
+        className="inline rounded-xl mr-4 w-12 h-12"
+        src={board.image || image}
+      />
       <div className="flex flex-col grow">
         <div>{board.name}</div>
         {!query.isLoading && (
           <div className="flex flex-row space-x-2">
-          <small className="font-normal text-gray-500">
-            {query.data.tokens.length} tokens
-          </small>
-          { board.privateBoard && <small className="font-normal text-gray-500 border-l-2 pl-2">
-            Private
-          </small> }
+            <small className="font-normal text-gray-500">
+              {query.data.tokens.length} tokens
+            </small>
+            {board.privateBoard && (
+              <small className="font-normal text-gray-500 border-l-2 pl-2">
+                Private
+              </small>
+            )}
           </div>
         )}
       </div>
-      { tokenExists && <div className="text-center text-gray-600 group-hover:invisible group-hover:w-0">
-        <CheckCircleIcon height={24} width={24} className="mx-auto"/>
-        <small className="text-xs">Added</small>
-      </div>}
+      {tokenExists && (
+        <div className="text-center text-gray-600 group-hover:invisible group-hover:w-0">
+          <CheckCircleIcon height={24} width={24} className="mx-auto" />
+          <small className="text-xs">Added</small>
+        </div>
+      )}
       <div className="text-center text-gray-600 invisible w-0 group-hover:w-auto group-hover:visible my-auto">
-        <small className="text-xs">{ tokenExists ? 'Remove' : 'Add' }</small>
+        <small className="text-xs">{tokenExists ? "Remove" : "Add"}</small>
       </div>
     </a>
   );
@@ -139,7 +157,11 @@ function InlineCreateNew({ create }: { create: (name: string) => void }) {
                 />
               </div>
               <div className="w-12">
-                <button type="submit" className="w-full py-4 px-2" onClick={() => create(_name)}>
+                <button
+                  type="submit"
+                  className="w-full py-4 px-2"
+                  onClick={() => create(_name)}
+                >
                   <svg
                     width="24"
                     height="24"
@@ -188,9 +210,8 @@ function InlineCreateNew({ create }: { create: (name: string) => void }) {
 const AddToMuseboard = NiceModal.create(() => {
   const modal = useModal();
   const user = useContext(UserContext);
-  const { query, addNew, addTokenToBoard, removeTokenFromBoard } = useBoardsQuery(
-    user?.uid as string
-  );
+  const { query, addNew, addTokenToBoard, removeTokenFromBoard } =
+    useBoardsQuery(user?.uid as string);
   const { getBoards } = useMuseboard();
   const onchainBoardsQuery = useQuery({
     queryKey: ["onchain:boards", user?.uid],
@@ -198,6 +219,7 @@ const AddToMuseboard = NiceModal.create(() => {
   });
   const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
   const { sendTransaction } = useTransactionSender();
+  const { encrypt } = useLitNetwork();
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);
 
@@ -246,67 +268,100 @@ const AddToMuseboard = NiceModal.create(() => {
     }
   }
 
-  async function handleAddTokenToBoard(boardId: string) {
+  async function handleAddTokenToBoard(boardId: string, privateBoard: boolean) {
     setError(null);
     setLoading({ status: 1, message: "Uploading to IPFS" });
 
     try {
       const _board = addTokenToBoard(boardId, modal.args as TToken);
-      const tokens = await upload({ tokens: _board.tokens });
+
+      const data: any = { private: privateBoard };
+
+      if (privateBoard) {
+        const conditions = getPrivateBoardConditions(user?.uid as string);
+
+        setLoading({ status: 1, message: "Encrypting tokens information" });
+        const { ciphertext, hash } = await encrypt(JSON.stringify(_board.tokens), conditions);
+
+        data.ciphertext = ciphertext;
+        data.hash = hash;
+        data.conditions = conditions;
+      } else {
+        data.tokens = _board.tokens;
+      }
+
+      console.log('data to be uploaded', data);
+      const tokens = await upload(data);
 
       setLoading({ status: 1, message: "Commiting changes to blockchain" });
-      const txn = sendTransaction(contract, "updateMetadata", [
+      await sendTransaction(contract, "updateMetadata", [
         "tokens",
         boardId,
         tokens.jsonurl,
       ]);
 
-      toast.promise(txn, {
-        loading: "Preparing and sending transaction",
-        success: "Transaction sent",
-        error: "Unable to send transaction",
-      });
-
-      await txn;
-
       modal.resolve({ boardId });
       modal.hide();
       query.refetch();
     } catch (err: any) {
-      console.log(err);
+      if (err.code === "ACTION_REJECTED") {
+        setError("User rejected the transaction");
+      } else {
+        console.error(err);
+
+        setError("That did't go as expected. We'll take a look into this.");
+      }
+
       setLoading({ status: 0, message: "Not Loading" });
       setError(err.message);
     }
   }
 
-  async function handleRemoveTokenFromBoard(boardId: string) {
+  async function handleRemoveTokenFromBoard(
+    boardId: string,
+    privateBoard: boolean
+  ) {
     setError(null);
     setLoading({ status: 1, message: "Uploading to IPFS" });
 
     try {
       const _board = removeTokenFromBoard(boardId, modal.args as TToken);
-      const tokens = await upload({ tokens: _board.tokens });
+      const data: any = { private: privateBoard };
+
+      if (privateBoard) {
+        const conditions = getPrivateBoardConditions(user?.uid as string);
+
+        setLoading({ status: 1, message: "Encrypting tokens information" });
+        const { ciphertext, hash } = await encrypt(JSON.stringify(_board.tokens), conditions);
+
+        data.ciphertext = ciphertext;
+        data.hash = hash;
+        data.conditions = conditions;
+      } else {
+        data.tokens = _board.tokens;
+      }
+
+      const tokens = await upload(data);
 
       setLoading({ status: 1, message: "Commiting changes to blockchain" });
-      const txn = sendTransaction(contract, "updateMetadata", [
+      await sendTransaction(contract, "updateMetadata", [
         "tokens",
         boardId,
         tokens.jsonurl,
       ]);
 
-      toast.promise(txn, {
-        loading: "Preparing and sending transaction",
-        success: "Transaction sent",
-        error: "Unable to send transaction",
-      });
-
-      await txn;
-
       modal.resolve({ boardId });
       modal.hide();
       query.refetch();
     } catch (err: any) {
-      console.log(err);
+      if (err.code === "ACTION_REJECTED") {
+        setError("User rejected the transaction");
+      } else {
+        console.error(err);
+
+        setError("That did't go as expected. We'll take a look into this.");
+      }
+
       setLoading({ status: 0, message: "Not Loading" });
       setError(err.message);
     }
@@ -314,55 +369,63 @@ const AddToMuseboard = NiceModal.create(() => {
 
   function renderContent() {
     if (loading.status !== 0) {
-      return <div className="flex flex-col space-y-2 text-center my-2">
-        <Loader />
-        <p>{loading.message}</p>
-      </div>
+      return (
+        <div className="flex flex-col space-y-2 text-center my-2">
+          <Loader />
+          <p>{loading.message}</p>
+        </div>
+      );
     }
 
     if (!user) {
-      return <div className="flex justify-center flex-col space-y-2">
-        <p className="text-center">Please connect wallet to add tokens to museboard</p>
-        <ConnectWallet
-          onChange={console.log}
-          // onChange={(address) => setLoading({ status: address ? 0: 1, message: address ? 'Not Loading' : 'Waiting for authentication' } )}
-        />
-      </div>
+      return (
+        <div className="flex justify-center flex-col space-y-2">
+          <p className="text-center">
+            Please connect wallet to add tokens to museboard
+          </p>
+          <ConnectWallet
+            onChange={console.log}
+            // onChange={(address) => setLoading({ status: address ? 0: 1, message: address ? 'Not Loading' : 'Waiting for authentication' } )}
+          />
+        </div>
+      );
     }
 
-    return <>
-      {error && (
-        <span className="px-2 py-4 border rounded-xl border-red-900 text-red-900 bg-red-200 w-full">
-          {error}
-        </span>
-      )}
-      {loading.status === 0 && onchainBoardsQuery.isLoading && (
-        <p>Loading boards</p>
-      )}
-      {loading.status === 0 && !onchainBoardsQuery.isLoading && (
-        <ul>
-          {onchainBoardsQuery.data &&
-            onchainBoardsQuery.data.map((board: TBoard) => (
-              <li key={board.id} className="my-2 font-semibold">
-                <InlineMuseboard
-                  board={board}
-                  token={modal.args as TToken}
-                  addToBoard={(boardId) =>
-                    handleAddTokenToBoard(boardId)
-                  }
-                  removeFromBoard={(boardId) => 
-                    handleRemoveTokenFromBoard(boardId)
-                  }
-                />
-              </li>
-            ))}
-          <li>
-            {/* <a className="text-center block font-semibold bg-gray-200 hover:shadow-lg rounded-lg cursor-pointer py-4" onClick={() => createNew()}>Create New</a> */}
-            <InlineCreateNew create={(name) => createNew(name)} />
-          </li>
-        </ul>
-      )}
-    </>
+    return (
+      <>
+        {error && (
+          <span className="px-2 py-4 border rounded-xl border-red-900 text-red-900 bg-red-200 w-full">
+            {error}
+          </span>
+        )}
+        {loading.status === 0 && onchainBoardsQuery.isLoading && (
+          <p>Loading boards</p>
+        )}
+        {loading.status === 0 && !onchainBoardsQuery.isLoading && (
+          <ul>
+            {onchainBoardsQuery.data &&
+              onchainBoardsQuery.data.map((board: TBoard) => (
+                <li key={board.id} className="my-2 font-semibold">
+                  <InlineMuseboard
+                    board={board}
+                    token={modal.args as TToken}
+                    addToBoard={(boardId) =>
+                      handleAddTokenToBoard(boardId, board.privateBoard)
+                    }
+                    removeFromBoard={(boardId) =>
+                      handleRemoveTokenFromBoard(boardId, board.privateBoard)
+                    }
+                  />
+                </li>
+              ))}
+            <li>
+              {/* <a className="text-center block font-semibold bg-gray-200 hover:shadow-lg rounded-lg cursor-pointer py-4" onClick={() => createNew()}>Create New</a> */}
+              <InlineCreateNew create={(name) => createNew(name)} />
+            </li>
+          </ul>
+        )}
+      </>
+    );
   }
 
   return (
@@ -402,7 +465,7 @@ const AddToMuseboard = NiceModal.create(() => {
                   as="p"
                   className="text-center px-8 mt-4 text-gray-400"
                 ></Dialog.Description>
-                { renderContent() }
+                {renderContent()}
               </Dialog.Panel>
             </Transition.Child>
           </div>

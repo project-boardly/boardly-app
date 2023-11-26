@@ -3,27 +3,22 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
 import { Link } from "react-router-dom";
 
-import { User, getAuth, onAuthStateChanged } from "firebase/auth";
-import { useConnectWallet } from "@web3-onboard/react";
-import { useEffect, useState } from "react";
-import { BrowserProvider } from "ethers";
-
-import { authenticate } from "../utils/siwe";
+import { getAuth } from "firebase/auth";
+import { useContext } from "react";
 import { Button, LinkButton } from "../common/buttons";
 
 import logo from "../logo.svg";
-import useUser from "../hooks/useUser";
 import { ConnectWallet } from "../common/components";
+import UserContext from "../contexts/UserContext";
 
 function NavActions() {
-  const { user, loading } = useUser();
+  const user = useContext(UserContext);
 
   async function disconnect() {
     const auth = getAuth();
-    console.log("sign out");
 
     await auth.signOut();
-    localStorage.removeItem("museboard:connected:wallet");
+    localStorage.clear();
   }
 
   if (!user) {

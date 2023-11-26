@@ -19,6 +19,7 @@ import { getERC725 } from "../hooks/useErc725";
 import { ERC725JSONSchema } from "@erc725/erc725.js";
 import { getEncryptionWallet, getPrivateBoardConditions } from "../contexts/LitNetworkContext";
 import useUniversalProfile from "../hooks/useUniversalProfile";
+import useMuseboard from "../hooks/useMuseboard";
 
 function CircleFileUpload({
   fileUrl,
@@ -176,6 +177,7 @@ const MuseboardModal = NiceModal.create(() => {
   const modal = useModal();
   const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
   const { addNew } = useBoardsQuery(user?.uid as string);
+  const { getTokens, updateMetadata } = useMuseboard();
   const { sendTransaction } = useTransactionSender();
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);
@@ -296,6 +298,13 @@ const MuseboardModal = NiceModal.create(() => {
           setLoading({ status: 1, message: "Setting encryption keys on Profile" });
           await sendTransaction(upContract, 'setData', [permissionKey, requiredPermissions]);
         }
+      }
+
+      if (privateBoard !== !(modal.args?.data as any).privateBoard) {
+        setLoading({ status: 1, message: privateBoard ? "Fetching and encrypting tokens" : "Fetching and decrypting tokens" });
+
+        const data = await getTokens(board.id);
+        await updateMetadata(board.id, 'tokens', data, privateBoard, setLoading);
       }
 
       if (logo) {

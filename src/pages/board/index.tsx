@@ -62,7 +62,7 @@ function BoardTokens({ boardId }: { boardId: string }) {
     );
   }
 
-  if (!query.data || query.data.tokens.length === 0) {
+  if (!query.data || !query.data.tokens ||  query.data.tokens.length === 0) {
     return (
       <div className="w-full h-56 bg-gray-50 flex flex-col justify-center text-center text-gray-500 space-y-4">
         <p className="text-xl block">{"This is empty :("}</p>

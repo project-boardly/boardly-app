@@ -80,7 +80,7 @@ function InlineMuseboard({
       return;
     }
 
-    const tokens = query.data.tokens;
+    const tokens = query.data.tokens || [];
 
     const matchedToken = tokens.find((_target: TToken) =>
       matchTokens(_target, token)
@@ -212,7 +212,7 @@ const AddToMuseboard = NiceModal.create(() => {
   const user = useContext(UserContext);
   const { query, addNew, addTokenToBoard, removeTokenFromBoard } =
     useBoardsQuery(user?.uid as string);
-  const { getBoards } = useMuseboard();
+  const { getBoards, updateMetadata } = useMuseboard();
   const onchainBoardsQuery = useQuery({
     queryKey: ["onchain:boards", user?.uid],
     queryFn: () => getBoards(user?.uid as string),
@@ -274,31 +274,7 @@ const AddToMuseboard = NiceModal.create(() => {
 
     try {
       const _board = addTokenToBoard(boardId, modal.args as TToken);
-
-      const data: any = { private: privateBoard };
-
-      if (privateBoard) {
-        const conditions = getPrivateBoardConditions(user?.uid as string);
-
-        setLoading({ status: 1, message: "Encrypting tokens information" });
-        const { ciphertext, hash } = await encrypt(JSON.stringify(_board.tokens), conditions);
-
-        data.ciphertext = ciphertext;
-        data.hash = hash;
-        data.conditions = conditions;
-      } else {
-        data.tokens = _board.tokens;
-      }
-
-      console.log('data to be uploaded', data);
-      const tokens = await upload(data);
-
-      setLoading({ status: 1, message: "Commiting changes to blockchain" });
-      await sendTransaction(contract, "updateMetadata", [
-        "tokens",
-        boardId,
-        tokens.jsonurl,
-      ]);
+      await updateMetadata(boardId, 'tokens', _board, privateBoard, setLoading);
 
       modal.resolve({ boardId });
       modal.hide();
@@ -326,29 +302,7 @@ const AddToMuseboard = NiceModal.create(() => {
 
     try {
       const _board = removeTokenFromBoard(boardId, modal.args as TToken);
-      const data: any = { private: privateBoard };
-
-      if (privateBoard) {
-        const conditions = getPrivateBoardConditions(user?.uid as string);
-
-        setLoading({ status: 1, message: "Encrypting tokens information" });
-        const { ciphertext, hash } = await encrypt(JSON.stringify(_board.tokens), conditions);
-
-        data.ciphertext = ciphertext;
-        data.hash = hash;
-        data.conditions = conditions;
-      } else {
-        data.tokens = _board.tokens;
-      }
-
-      const tokens = await upload(data);
-
-      setLoading({ status: 1, message: "Commiting changes to blockchain" });
-      await sendTransaction(contract, "updateMetadata", [
-        "tokens",
-        boardId,
-        tokens.jsonurl,
-      ]);
+      await updateMetadata(boardId, 'tokens', _board, privateBoard, setLoading);
 
       modal.resolve({ boardId });
       modal.hide();

@@ -2,14 +2,21 @@ import { useContract } from "./useContract";
 import { abi } from 'museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json';
 import { decodeKeyValue } from '@erc725/erc725.js/build/main/src/lib/utils';
 import useLitNetwork from "./useLitNetwork";
+import { getPrivateBoardConditions } from "../contexts/LitNetworkContext";
+import { useContext } from "react";
+import UserContext from "../contexts/UserContext";
+import { upload } from "../utils/ipfs";
+import { useTransactionSender } from "./transactions";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
 }
 
 export default function useMuseboard() {
+  const user = useContext(UserContext);
   const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
-  const { decrypt } = useLitNetwork();
+  const { sendTransaction } = useTransactionSender();
+  const { encrypt, decrypt } = useLitNetwork();
 
   async function getBoards(address: string) {
     const boardIds = await contract.tokenIdsOf(address);
@@ -52,5 +59,32 @@ export default function useMuseboard() {
     })
   }
 
-  return { contract, getBoards, getMetadata, getTokens };
+  async function updateMetadata(boardId: string, namespace: string, data: any, shouldEncrypt: boolean, onChange: (status: any) => void) {
+    const tokensData: any = { private: shouldEncrypt };
+
+    if (shouldEncrypt) {
+      onChange({ status: 1, message: "Encrypting tokens information" });
+      const conditions = getPrivateBoardConditions(user?.uid as string);
+
+      const { ciphertext, hash } = await encrypt(JSON.stringify(data.tokens), conditions);
+
+      tokensData.ciphertext = ciphertext;
+      tokensData.hash = hash;
+      tokensData.conditions = conditions;
+    }
+    else {
+      tokensData.tokens = data.tokens;
+    }
+
+    const tokens = await upload(tokensData);
+
+    onChange({ status: 1, message: `Commiting ${shouldEncrypt ? 'encrypted' : ''} tokens to blockchain` });
+    await sendTransaction(contract, "updateMetadata", [
+      namespace,
+      boardId,
+      tokens.jsonurl,
+    ]);
+  }
+
+  return { contract, getBoards, getMetadata, getTokens, updateMetadata };
 }

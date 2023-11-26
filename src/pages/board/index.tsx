@@ -133,12 +133,6 @@ function BoardActions({
         data: calldata,
       });
   
-      toast.promise(txn, {
-        loading: "Preparing and sending transaction",
-        success: "Transaction sent",
-        error: "Unable to send transaction",
-      });
-  
       await txn;
     } catch (err: any) {
       console.log(contract.interface.parseError(err.data));
@@ -151,12 +145,6 @@ function BoardActions({
     const txn = executeTransactionRequest({
       to: import.meta.env.VITE_MUSEBOARD_CONTRACT,
       data: calldata,
-    });
-
-    toast.promise(txn, {
-      loading: "Preparing and sending transaction",
-      success: "Transaction sent",
-      error: "Unable to send transaction",
     });
 
     await txn;

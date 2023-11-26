@@ -18,6 +18,7 @@ import { useEffect } from "react";
 import useUser from "./hooks/useUser";
 import Museboards from "./pages/profile/boards";
 import Assets from "./pages/profile/assets";
+import Universe from "./pages/profile/universe";
 
 const router = (queryClient: QueryClient) => createBrowserRouter(
   createRoutesFromElements(
@@ -28,6 +29,7 @@ const router = (queryClient: QueryClient) => createBrowserRouter(
       <Route path='/profile/:address' element={<ProfilePage />}>
         <Route index={true} path='/profile/:address' element={<Museboards />}/>
         <Route path='/profile/:address/assets' element={<Assets />}/>
+        <Route path='/profile/:address/universe' element={<Universe />}/>
       </Route>
       <Route path='/board/:boardId' element={<BoardPage />} />
     </Route>

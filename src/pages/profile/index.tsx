@@ -2,11 +2,7 @@ import { useEffect, useState } from "react";
 
 import safeGet from "lodash/get";
 
-import {
-  NavLink,
-  Outlet,
-  useParams,
-} from "react-router-dom";
+import { NavLink, Outlet, useParams } from "react-router-dom";
 import { create } from "blockies-ts";
 import { useModal } from "@ebay/nice-modal-react";
 import { getAddress, zeroPadValue } from "ethers";
@@ -55,7 +51,10 @@ function FollowInfo({ address }: { address: string }) {
 
   return (
     <div className="flex row">
-      <a className="cursor-pointer" onClick={() => followingModal.show({ address })}>
+      <a
+        className="cursor-pointer"
+        onClick={() => followingModal.show({ address })}
+      >
         <span className="text-gray-400">Following</span>{" "}
         <span className="font-bold">{stats.following}</span>
       </a>
@@ -75,7 +74,13 @@ function FollowInfo({ address }: { address: string }) {
   );
 }
 
-export function ProfileCard({ address, followersInfo = true }: { address: string, followersInfo?: boolean }) {
+export function ProfileCard({
+  address,
+  followersInfo = true,
+}: {
+  address: string;
+  followersInfo?: boolean;
+}) {
   const { user, loading: authUserLoading } = useUser();
   const { query } = useProfileQuery(address);
   const backgroundImage = ipfsUrl(
@@ -83,27 +88,24 @@ export function ProfileCard({ address, followersInfo = true }: { address: string
   );
 
   if (query.isLoading) {
-    return <div
-      className="max-w-7xl mx-auto bg-cover bg-center shadow-2xl rounded-xl overflow-hidden"
-    >
-      <div className="backdrop-blur-md bg-black/50">
-        <div className="max-w-sm mx-auto py-10 text-white">
-          <div className="flex flex-row">
-            <div className="flex-none w-50 h-50 py-4 animate-pulse backdrop-blur-lg bg-white/30">
-            </div>
-            <div className="grow py-4 ">
-              <div className="px-4 animate-pulse backdrop-blur-lg bg-white/30">
-                <h2 className="text-3xl font-extrabold animate-pulse backdrop-blur-lg bg-white/30 w-full"></h2>
-                <Address address={address} className="" />
+    return (
+      <div className="max-w-7xl mx-auto bg-cover bg-center shadow-2xl rounded-xl overflow-hidden">
+        <div className="backdrop-blur-md bg-black/50">
+          <div className="max-w-sm mx-auto py-10 text-white">
+            <div className="flex flex-row">
+              <div className="flex-none w-50 h-50 py-4 animate-pulse backdrop-blur-lg bg-white/30"></div>
+              <div className="grow py-4 ">
+                <div className="px-4 animate-pulse backdrop-blur-lg bg-white/30">
+                  <h2 className="text-3xl font-extrabold animate-pulse backdrop-blur-lg bg-white/30 w-full"></h2>
+                  <Address address={address} className="" />
+                </div>
               </div>
             </div>
-          </div>
-          <div className="py-4 animate-pulse backdrop-blur-lg bg-white/30">
-            
+            <div className="py-4 animate-pulse backdrop-blur-lg bg-white/30"></div>
           </div>
         </div>
       </div>
-    </div>
+    );
   }
 
   if (!query.data) {
@@ -134,7 +136,7 @@ export function ProfileCard({ address, followersInfo = true }: { address: string
               <div className="px-4">
                 <h2 className="text-3xl font-extrabold">{query.data.name}</h2>
                 <Address address={address} className="" />
-                { followersInfo && <FollowInfo address={address} /> }
+                {followersInfo && <FollowInfo address={address} />}
               </div>
             </div>
           </div>
@@ -172,25 +174,24 @@ export default function ProfilePage() {
   }
 
   return (
-    <>
-      <div className="min-h-full">
-        <main>
-          <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-4">
-            <ProfileCard address={address as string} />
-            <div className="space-x-3">
-              <ActiveNavLink to={`/profile/${address}`}>
-                museboards
-              </ActiveNavLink>
-              <ActiveNavLink to={`/profile/${address}/assets`}>
-                assets
-              </ActiveNavLink>
-            </div>
-            <div className="mt-2">
-              <Outlet />
-            </div>
+    <div className="min-h-full">
+      <main>
+        <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-4">
+          <ProfileCard address={address as string} />
+          <div className="space-x-3">
+            <ActiveNavLink to={`/profile/${address}`}>museboards</ActiveNavLink>
+            <ActiveNavLink to={`/profile/${address}/assets`}>
+              assets
+            </ActiveNavLink>
+            <ActiveNavLink to={`/profile/${address}/universe`}>
+              universe
+            </ActiveNavLink>
           </div>
-        </main>
-      </div>
-    </>
+          <div className="mt-2">
+            <Outlet />
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }

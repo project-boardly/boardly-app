@@ -244,12 +244,6 @@ const AddToMuseboard = NiceModal.create(() => {
         tokens.jsonurl,
       ]);
 
-      toast.promise(txn, {
-        loading: "Preparing and sending transaction",
-        success: "Transaction sent",
-        error: "Unable to send transaction",
-      });
-
       await txn;
 
       setLoading({ status: 0, message: "Not Loading" });

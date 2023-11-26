@@ -15,8 +15,8 @@ export default function NFTCard({
   chain: string,
   collection: string;
   tokenId: number;
-  metadataUrl?: string;
   name: string;
+  metadataUrl?: string;
   standard?: string;
   addToMuseboard?: () => void
 }) {

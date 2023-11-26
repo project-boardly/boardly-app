@@ -10,11 +10,13 @@ import FollowingListModal from './modals/FollowingListModal';
 import FollowersListModal from './modals/FollowersListModal';
 
 import { LitProvider } from './contexts/LitNetworkContext';
+import UpdateProfilePictureModal from './modals/UpdateProfilePictureModal';
 
 NiceModal.register('add-to-museboard', AddToMuseboard);
 NiceModal.register('create-museboard', CreateMuseboard);
 NiceModal.register('list-following', FollowingListModal);
 NiceModal.register('list-followers', FollowersListModal);
+NiceModal.register('profile-picture-modal', UpdateProfilePictureModal);
 
 function App() {
   useEffect(() => {

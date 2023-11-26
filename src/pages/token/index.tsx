@@ -7,6 +7,8 @@ import collections from '../../collections';
 const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
 
 import addIcon from "../../addIcon.svg";
+import { useModal } from "@ebay/nice-modal-react";
+import toast from "react-hot-toast";
 
 function TokenImages({ images }: { images: any[] }) {
   const url = images[0].url;
@@ -23,6 +25,8 @@ function TokenImages({ images }: { images: any[] }) {
 export default function Token() {
   const { chain, collection, tokenId } = useParams();
   const collectionMeta = collections.find((col) => col.metadata.chain === chain && col.metadata.address === collection);
+  const pfpModal = useModal('profile-picture-modal');
+  const addToMuseboard = useModal('add-to-museboard');
   const { fetchMetadata } = useCollection(
     chain as string,
     collection as string
@@ -33,6 +37,13 @@ export default function Token() {
     staleTime: 60 * 60 * 1000,
     queryFn: () => fetchMetadata(tokenId as string),
   });
+
+  function handleAddToMuseboard ({ chain, collection, tokenId }: any) {
+    addToMuseboard.show({ chain, collection, tokenId })
+      .then(() => {
+        toast.success(<p>Token added to board</p>);
+      });
+  }
 
   if (query.isLoading) {
     return <p>Loading</p>;
@@ -55,7 +66,7 @@ export default function Token() {
             </button>
             <span className="grow"></span>
             <button
-              onClick={() => window.alert('add to museboard')}
+              onClick={handleAddToMuseboard}
               className="px-4 py-2 bg-gray-200 rounded-lg text-black"
             >
               Add to museboard
@@ -91,14 +102,20 @@ export default function Token() {
             <span>Description</span>
             <p>{data.description}</p>
           </div>
-          <div className="text-center my-8">
+          <div className="text-center my-8 flex flex-col space-y-4 max-w-xs mx-auto">
             <button
-              onClick={() => window.alert('add to museboard')}
+              onClick={handleAddToMuseboard}
               className="bg-black text-white font-bold py-4 px-8 shadow-lg rounded-2xl"
             >
               <img className="inline mr-4" alt="Add" src={addIcon} />
               Add to museboard
             </button>
+            { <button
+              onClick={() => pfpModal.show({ chain, collection, tokenId, name: data.name })}
+              className="bg-white border-2 font-bold py-4 px-8 rounded-2xl hover:bg-white hover:shadow-lg"
+            >
+              Set as Profile Picture
+            </button> }
           </div>
           <div className="grid grid-cols-2">
             <div className="w-full">

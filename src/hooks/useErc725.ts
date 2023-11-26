@@ -11,3 +11,12 @@ export function useErc725 (address: string, schema: ERC725JSONSchema[]) {
     config
   );
 }
+
+export function getERC725(address: string, schema: ERC725JSONSchema[]) {
+  return new ERC725(
+    schema,
+    address,
+    window.lukso,
+    config
+  );
+}

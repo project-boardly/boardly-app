@@ -18,6 +18,7 @@ export type TBoard = {
   images?: any[]
   owner?: string;
   tokens: TToken[];
+  privateBoard: boolean
 }
 
 function getBoards(): TBoard[] {

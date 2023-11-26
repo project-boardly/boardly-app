@@ -6,15 +6,19 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { useContract } from "../hooks/useContract";
 import { useTransactionSender } from "../hooks/transactions";
 import { upload, uploadImage } from "../utils/ipfs";
-import toast from "react-hot-toast";
 import { TToken, useBoardsQuery } from "../queries/boards";
 
 import safeGet from "lodash/get";
 
 import { abi } from "museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json";
+import LSP6KeyManager from '@erc725/erc725.js/schemas/LSP6KeyManager.json';
 
 import useUser from "../hooks/useUser";
 import { Loader } from "./AddToMuseboard";
+import { getERC725 } from "../hooks/useErc725";
+import { ERC725JSONSchema } from "@erc725/erc725.js";
+import { getEncryptionWallet } from "../contexts/LitNetworkContext";
+import useUniversalProfile from "../hooks/useUniversalProfile";
 
 function CircleFileUpload({
   fileUrl,
@@ -175,6 +179,7 @@ const MuseboardModal = NiceModal.create(() => {
   const { sendTransaction } = useTransactionSender();
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);
+  const { contract: upContract } = useUniversalProfile(modal.args?.authUser as string);
 
   async function createNew({
     title,
@@ -202,6 +207,21 @@ const MuseboardModal = NiceModal.create(() => {
         privateBoard,
       };
 
+      if (privateBoard) {
+        setLoading({ status: 1, message: "Validating encryption keys" });
+        const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
+        const wallet = await getEncryptionWallet();
+
+        const permissions = await erc.fetchData({ keyName: 'AddressPermissions:Permissions:<address>', dynamicKeyParts: wallet.address });
+        const requiredPermissions = erc.encodePermissions({ DECRYPT: true });
+        const permissionKey = erc.encodeKeyName('AddressPermissions:Permissions:<address>', wallet.address);
+
+        if (!permissions.value) {
+          setLoading({ status: 1, message: "Setting encryption keys on Profile" });
+          await sendTransaction(upContract, 'setData', [permissionKey, requiredPermissions]);
+        }
+      }
+
       if (logo) {
         setLoading({ status: 1, message: "Uploading logo to IPFS" });
         const images = await uploadImage(logo);
@@ -215,15 +235,7 @@ const MuseboardModal = NiceModal.create(() => {
 
       setLoading({ status: 1, message: "Commiting changes to blockchain" });
 
-      const txn = sendTransaction(contract, "mint", [metadata.jsonurl, "0x"]);
-
-      toast.promise(txn, {
-        loading: "Preparing and sending transaction",
-        success: "Transaction sent",
-        error: "Unable to send transaction",
-      });
-
-      await txn;
+      await sendTransaction(contract, "mint", [metadata.jsonurl, "0x"]);
 
       setLoading({ status: 0, message: "Not Loading" });
 
@@ -285,19 +297,11 @@ const MuseboardModal = NiceModal.create(() => {
 
       setLoading({ status: 1, message: "Commiting changes to blockchain" });
 
-      const txn = sendTransaction(contract, "updateMetadata", [
+      await sendTransaction(contract, "updateMetadata", [
         "metadata",
         board.id,
         metadata.jsonurl,
       ]);
-
-      toast.promise(txn, {
-        loading: "Preparing and sending transaction",
-        success: "Transaction sent",
-        error: "Unable to send transaction",
-      });
-
-      await txn;
 
       setLoading({ status: 0, message: "Not Loading" });
 
@@ -306,7 +310,14 @@ const MuseboardModal = NiceModal.create(() => {
       modal.resolve({ boardId: board.id });
       modal.hide();
     } catch (err: any) {
-      console.log(err);
+      if (err.code === "ACTION_REJECTED") {
+        setError("User rejected the transaction");
+      } else {
+        console.error(err);
+
+        setError("That did't go as expected. We'll take a look into this.");
+      }
+
       setLoading({ status: 0, message: "Not Loading" });
       setError(err.message);
     }
@@ -323,9 +334,9 @@ const MuseboardModal = NiceModal.create(() => {
     logo: File;
     privateBoard: boolean;
   }) {
-    if (modal.args) {
+    if (modal.args?.update) {
       return update({
-        board: modal.args,
+        board: modal.args.data,
         title,
         description,
         logo,
@@ -367,7 +378,7 @@ const MuseboardModal = NiceModal.create(() => {
                   as="h2"
                   className="text-2xl pl-4 font-medium leading-6 text-gray-900 text-center"
                 >
-                  {modal.args ? "Update board" : "Create new board"}
+                  {modal.args?.update ? "Update board" : "Create new board"}
                 </Dialog.Title>
                 <Dialog.Description
                   as="p"
@@ -386,7 +397,7 @@ const MuseboardModal = NiceModal.create(() => {
                 )}
                 {loading.status === 0 && (
                   <BoardForm
-                    initialValue={modal.args}
+                    initialValue={modal.args?.data}
                     submitForm={handleSubmit}
                     onCancel={() => modal.hide()}
                   />

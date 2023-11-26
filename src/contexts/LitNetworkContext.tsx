@@ -60,11 +60,16 @@ const constructAuthSig = (sig: string, hashString: string, address: string) => {
   };
 }
 
-async function getAuthSig() {
+export async function getEncryptionWallet() {
   const nonce = localStorage.getItem('encryption-nonce');
   const secret = Mnemonic.fromEntropy(nonce as string);
   const wallet = Wallet.fromPhrase(secret.phrase);
 
+  return wallet;
+}
+
+async function getAuthSig() {
+  const wallet = await getEncryptionWallet();
   const siweMessage = createSiweMessage(wallet.address);
   const sig = await wallet.signMessage(siweMessage);
 

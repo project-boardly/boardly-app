@@ -17,6 +17,8 @@ import {
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 import App from './App.tsx'
+import { UserProvider } from './contexts/UserContext.tsx';
+
 import './index.css';
 
 // Your web app's Firebase configuration
@@ -37,12 +39,14 @@ export const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <NiceModal.Provider>
-        <ReactQueryDevtools initialIsOpen={false} />
-        <App />
-        <Toaster position='bottom-center' />
-      </NiceModal.Provider>
-    </QueryClientProvider>
+    <UserProvider>
+      <QueryClientProvider client={queryClient}>
+        <NiceModal.Provider>
+          <ReactQueryDevtools initialIsOpen={false} />
+          <App />
+          <Toaster position='bottom-center' />
+        </NiceModal.Provider>
+      </QueryClientProvider>
+    </UserProvider>
   </React.StrictMode>
 )

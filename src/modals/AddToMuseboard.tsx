@@ -1,5 +1,5 @@
 /* This example requires Tailwind CSS v2.0+ */
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useContext, useEffect, useState } from "react";
 import { Transition, Dialog } from "@headlessui/react";
 
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
@@ -14,9 +14,9 @@ import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import useMuseboard from "../hooks/useMuseboard";
 import { create } from "blockies-ts";
-import useUser from "../hooks/useUser";
 import { ConnectWallet } from "../common/components";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import UserContext from "../contexts/UserContext";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -94,9 +94,14 @@ function InlineMuseboard({
       <div className="flex flex-col grow">
         <div>{board.name}</div>
         {!query.isLoading && (
+          <div className="flex flex-row space-x-2">
           <small className="font-normal text-gray-500">
             {query.data.tokens.length} tokens
           </small>
+          { board.privateBoard && <small className="font-normal text-gray-500 border-l-2 pl-2">
+            Private
+          </small> }
+          </div>
         )}
       </div>
       { tokenExists && <div className="text-center text-gray-600 group-hover:invisible group-hover:w-0">
@@ -181,8 +186,8 @@ function InlineCreateNew({ create }: { create: (name: string) => void }) {
 }
 
 const AddToMuseboard = NiceModal.create(() => {
-  const { user, loading: userLoading } = useUser();
   const modal = useModal();
+  const user = useContext(UserContext);
   const { query, addNew, addTokenToBoard, removeTokenFromBoard } = useBoardsQuery(
     user?.uid as string
   );
@@ -308,10 +313,6 @@ const AddToMuseboard = NiceModal.create(() => {
   }
 
   function renderContent() {
-    if (userLoading) {
-      return <p>Loading</p>
-    }
-
     if (loading.status !== 0) {
       return <div className="flex flex-col space-y-2 text-center my-2">
         <Loader />

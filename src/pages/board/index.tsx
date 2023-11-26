@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { Masonry } from "masonic";
@@ -19,6 +19,7 @@ import useMuseboard from "../../hooks/useMuseboard";
 import useUser from "../../hooks/useUser";
 import useFollowModule from "../../hooks/useFollowModule";
 import { useTransactionSender } from "../../hooks/transactions";
+import UserContext from "../../contexts/UserContext";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -216,6 +217,7 @@ function Followers({ identifier }: { identifier: string }) {
 }
 
 export default function BoardPage() {
+  const user = useContext(UserContext);
   const { boardId } = useParams();
   const { getMetadata } = useMuseboard();
   const query = useQuery({
@@ -245,7 +247,7 @@ export default function BoardPage() {
       return;
     }
 
-    modal.show(query.data);
+    modal.show({ data: query.data, update: true, authUser: user?.uid });
   }
 
   if (query.isLoading) {

@@ -125,7 +125,9 @@ export default function Museboards() {
   const { address } = useParams();
 
   function openModal() {
-    newMuseboardModal.show();
+    if (userLoading) { return; }
+
+    newMuseboardModal.show({ authUser: user?.uid });
   }
 
   return (

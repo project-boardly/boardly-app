@@ -66,7 +66,7 @@ export default function useMuseboard() {
       onChange({ status: 1, message: "Encrypting tokens information" });
       const conditions = getPrivateBoardConditions(user?.uid as string);
 
-      const { ciphertext, hash } = await encrypt(JSON.stringify(data.tokens), conditions);
+      const { ciphertext, hash } = await encrypt(JSON.stringify(data.tokens || []), conditions);
 
       tokensData.ciphertext = ciphertext;
       tokensData.hash = hash;

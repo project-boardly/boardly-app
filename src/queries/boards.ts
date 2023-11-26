@@ -48,6 +48,8 @@ function getBoard(boardId: BoardId): TBoard | null {
     const data = JSON.parse(localStorage.getItem(`board:${boardId}`) as string);
     const image = blockies.create({ seed: boardId, bgcolor: '#000000' }).toDataURL();
 
+    !data.tokens && (data.tokens = []);
+
     return { ...data, image };
   } catch (err) {
     console.log(err);

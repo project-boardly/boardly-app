@@ -12,9 +12,11 @@ import {
   LitNodeClient,
   encryptString,
   decryptToString,
+  uint8arrayToString,
+  uint8arrayFromString
 } from "@lit-protocol/lit-node-client";
 
-import { createSiweMessage } from "../utils/siwe";
+import { SiweMessage } from "siwe";
 
 const client = new LitNodeClient({
   litNetwork: "cayenne",
@@ -76,6 +78,28 @@ const constructAuthSig = (sig: string, hashString: string, address: string) => {
   };
 };
 
+function createLitSiweMessage (address: string) {
+  const domain = window.location.host;
+  const origin = window.location.origin;
+  const upAddress = uint8arrayToString(uint8arrayFromString(address, "utf8"), "base64url")
+
+  const message = new SiweMessage({
+    domain,
+    address,
+    statement: 'Login to museboard',
+    uri: origin + '/',
+    nonce: 'lWnXtPjsqVSuDOkmS',
+    version: '1',
+    issuedAt: new Date(Date.parse('2023-11-26T10:13:51.151Z')).toISOString(),
+    chainId: 4201,
+    resources: [
+      `upAddress:${upAddress}`
+    ]
+  });
+
+  return message.prepareMessage();
+}
+
 export async function getEncryptionWallet() {
   let nonce = localStorage.getItem("encryption-nonce");
 
@@ -102,7 +126,7 @@ export async function getEncryptionWallet() {
 
 async function getAuthSig() {
   const wallet = await getEncryptionWallet();
-  const siweMessage = createSiweMessage(wallet.address);
+  const siweMessage = createLitSiweMessage(wallet.address);
   const sig = await wallet.signMessage(siweMessage);
 
   return constructAuthSig(sig, siweMessage, wallet.address);

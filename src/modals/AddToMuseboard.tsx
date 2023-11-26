@@ -87,8 +87,6 @@ function InlineMuseboard({
     );
 
     setTokenExists(!!matchedToken);
-
-    console.log(matchedToken, token, tokens);
   }, [query.data]);
 
   return (
@@ -110,7 +108,7 @@ function InlineMuseboard({
         {!query.isLoading && (
           <div className="flex flex-row space-x-2">
             <small className="font-normal text-gray-500">
-              {query.data.tokens.length} tokens
+              {(query.data.tokens || []).length} tokens
             </small>
             {board.privateBoard && (
               <small className="font-normal text-gray-500 border-l-2 pl-2">

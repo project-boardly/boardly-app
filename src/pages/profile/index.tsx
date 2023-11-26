@@ -2,17 +2,12 @@ import { useEffect, useState } from "react";
 
 import safeGet from "lodash/get";
 
-import { PlusCircleIcon } from "@heroicons/react/24/outline";
-
 import {
-  Link,
   NavLink,
   Outlet,
-  useNavigation,
   useParams,
 } from "react-router-dom";
 import { create } from "blockies-ts";
-import { getAuth } from "firebase/auth";
 import { useModal } from "@ebay/nice-modal-react";
 import { getAddress, zeroPadValue } from "ethers";
 
@@ -80,7 +75,7 @@ function FollowInfo({ address }: { address: string }) {
   );
 }
 
-function ProfileCard({ address }: { address: string }) {
+export function ProfileCard({ address, followersInfo = true }: { address: string, followersInfo?: boolean }) {
   const { user, loading: authUserLoading } = useUser();
   const { query } = useProfileQuery(address);
   const backgroundImage = ipfsUrl(
@@ -120,12 +115,12 @@ function ProfileCard({ address }: { address: string }) {
       className="max-w-7xl mx-auto bg-cover bg-center shadow-2xl rounded-xl overflow-hidden"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
-      <div className="backdrop-blur-md bg-black/50">
+      <div className="backdrop-blur-md bg-black/50 px-16">
         <div className="max-w-sm mx-auto py-10 text-white">
-          <div className="flex flex-row">
-            <div className="flex-none w-50">
+          <div className="flex lg:flex-row sm:flex-col">
+            <div className="flex-none w-50 float-right">
               <img
-                className="w-20 rounded-full"
+                className="w-20 rounded-full sm:mx-auto"
                 src={ipfsUrl(
                   safeGet(
                     query,
@@ -139,7 +134,7 @@ function ProfileCard({ address }: { address: string }) {
               <div className="px-4">
                 <h2 className="text-3xl font-extrabold">{query.data.name}</h2>
                 <Address address={address} className="" />
-                <FollowInfo address={address} />
+                { followersInfo && <FollowInfo address={address} /> }
               </div>
             </div>
           </div>

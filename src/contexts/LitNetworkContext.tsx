@@ -6,6 +6,7 @@ import {
   Wallet,
   keccak256,
   verifyMessage,
+  zeroPadValue,
 } from "ethers";
 
 import {
@@ -13,7 +14,7 @@ import {
   encryptString,
   decryptToString,
   uint8arrayToString,
-  uint8arrayFromString
+  uint8arrayFromString,
 } from "@lit-protocol/lit-node-client";
 
 import { SiweMessage } from "siwe";
@@ -22,10 +23,154 @@ const client = new LitNodeClient({
   litNetwork: "cayenne",
 });
 
-export function getPrivateBoardConditions (owner: string) {
+export function getFollowerOnlyBoardConditions(owner: string) {
+  const targetAddr = zeroPadValue(owner, 32);
+
   return [
     {
       contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
+      functionName: "checkPermission",
+      functionParams: [
+        owner,
+        ":userAddress",
+        "0x0000000000000000000000000000000000000000000000000000000000100000",
+      ],
+      functionAbi: {
+        constant: true,
+        inputs: [
+          {
+            name: "up",
+            type: "address",
+          },
+          {
+            name: "actor",
+            type: "address",
+          },
+          {
+            name: "permissions",
+            type: "bytes32",
+          },
+        ],
+        name: "checkPermission",
+        outputs: [
+          {
+            name: "",
+            type: "bool",
+          },
+        ],
+        payable: false,
+        stateMutability: "view",
+        type: "function",
+      },
+      chain: "luksoTestnet",
+      returnValueTest: {
+        key: "",
+        comparator: "=",
+        value: "true",
+      },
+    },
+    {
+      operator: "or",
+    },
+    [
+      {
+        contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
+        standardContractType: "SIWE",
+        functionName: "checkPermission",
+        functionParams: [
+          ":litParam:upAddress",
+          ":userAddress",
+          "0x0000000000000000000000000000000000000000000000000000000000100000",
+        ],
+        functionAbi: {
+          constant: true,
+          inputs: [
+            {
+              name: "up",
+              type: "address",
+            },
+            {
+              name: "actor",
+              type: "address",
+            },
+            {
+              name: "permissions",
+              type: "bytes32",
+            },
+          ],
+          name: "checkPermission",
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+            },
+          ],
+          payable: false,
+          stateMutability: "view",
+          type: "function",
+        },
+        chain: "luksoTestnet",
+        returnValueTest: {
+          key: "",
+          comparator: "=",
+          value: "true",
+        },
+      },
+      {
+        operator: "and",
+      },
+      {
+        contractAddress: "0xC79fb40EE0FCfdF0A4301d7CDA9A72F7921E4ECd",
+        standardContractType: "SIWE",
+        functionName: "isFollowingTarget",
+        functionParams: [
+          "0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb",
+          targetAddr,
+          ":litParam:upAddress",
+        ],
+        functionAbi: {
+          constant: true,
+          inputs: [
+            {
+              name: "target",
+              type: "address",
+            },
+            {
+              name: "data",
+              type: "bytes32",
+            },
+            {
+              name: "follower",
+              type: "address",
+            },
+          ],
+          name: "isFollowingTarget",
+          outputs: [
+            {
+              name: "",
+              type: "bool",
+            },
+          ],
+          payable: false,
+          stateMutability: "view",
+          type: "function",
+        },
+        chain: "luksoTestnet",
+        returnValueTest: {
+          key: "",
+          comparator: "=",
+          value: "true",
+        },
+      },
+    ],
+  ];
+}
+
+export function getPrivateBoardConditions(owner: string) {
+  return [
+    {
+      contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
+      standardContractType: "SIWE",
       functionName: "checkPermission",
       functionParams: [
         owner,
@@ -78,23 +223,24 @@ const constructAuthSig = (sig: string, hashString: string, address: string) => {
   };
 };
 
-function createLitSiweMessage (address: string) {
+function createLitSiweMessage(address: string, upAddress: string) {
   const domain = window.location.host;
   const origin = window.location.origin;
-  const upAddress = uint8arrayToString(uint8arrayFromString(address, "utf8"), "base64url")
+  const encodedUpAddress = uint8arrayToString(
+    uint8arrayFromString(upAddress, "utf8"),
+    "base64url"
+  );
 
   const message = new SiweMessage({
     domain,
     address,
-    statement: 'Login to museboard',
-    uri: origin + '/',
-    nonce: 'lWnXtPjsqVSuDOkmS',
-    version: '1',
-    issuedAt: new Date(Date.parse('2023-11-26T10:13:51.151Z')).toISOString(),
+    statement: "Login to museboard",
+    uri: origin + "/",
+    nonce: "lWnXtPjsqVSuDOkmS",
+    version: "1",
+    issuedAt: new Date(Date.parse("2023-11-26T10:13:51.151Z")).toISOString(),
     chainId: 4201,
-    resources: [
-      `upAddress:${upAddress}`
-    ]
+    resources: [`litParam:upAddress:${encodedUpAddress}`],
   });
 
   return message.prepareMessage();
@@ -124,17 +270,17 @@ export async function getEncryptionWallet() {
   return wallet;
 }
 
-async function getAuthSig() {
+async function getAuthSig(upAddress: string) {
   const wallet = await getEncryptionWallet();
-  const siweMessage = createLitSiweMessage(wallet.address);
+  const siweMessage = createLitSiweMessage(wallet.address, upAddress);
   const sig = await wallet.signMessage(siweMessage);
 
   return constructAuthSig(sig, siweMessage, wallet.address);
 }
 
-async function encrypt(message: string, conditions: any[]) {
+async function encrypt(message: string, conditions: any[], upAddress: string) {
   await client.connect();
-  const authSig = await getAuthSig();
+  const authSig = await getAuthSig(upAddress);
 
   const { ciphertext, dataToEncryptHash } = await encryptString(
     {
@@ -149,9 +295,14 @@ async function encrypt(message: string, conditions: any[]) {
   return { ciphertext, hash: dataToEncryptHash };
 }
 
-async function decrypt(ciphertext: string, dataHash: string, conditions: any[]) {
+async function decrypt(
+  ciphertext: string,
+  dataHash: string,
+  conditions: any[],
+  upAddress: string
+) {
   await client.connect();
-  const authSig = await getAuthSig();
+  const authSig = await getAuthSig(upAddress);
 
   const decryptedString = await decryptToString(
     {

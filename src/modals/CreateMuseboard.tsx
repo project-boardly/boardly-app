@@ -17,7 +17,7 @@ import useUser from "../hooks/useUser";
 import { Loader } from "./AddToMuseboard";
 import { getERC725 } from "../hooks/useErc725";
 import { ERC725JSONSchema } from "@erc725/erc725.js";
-import { getEncryptionWallet, getPrivateBoardConditions } from "../contexts/LitNetworkContext";
+import { getEncryptionWallet } from "../contexts/LitNetworkContext";
 import useUniversalProfile from "../hooks/useUniversalProfile";
 import useMuseboard from "../hooks/useMuseboard";
 
@@ -88,11 +88,20 @@ function BoardForm({
   const [enabled, setEnabled] = useState(
     safeGet(initialValue, "privateBoard", false)
   );
+  const [followersOnly, setFollowersOnly] = useState(
+    safeGet(initialValue, "followersOnly", false)
+  );
+
+  useEffect(() => {
+    if (!enabled && followersOnly) {
+      setFollowersOnly(false);
+    }
+  }, [enabled]);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    submitForm({ title, description, logo, privateBoard: enabled });
+    submitForm({ title, description, logo, privateBoard: enabled, followersOnly });
   }
 
   function handleClose(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
@@ -148,6 +157,23 @@ function BoardForm({
           </Switch>
           <div className="grow font-bold ml-4">Hide from others</div>
         </div>
+        { enabled && <div className="flex flex-row mt-4">
+          <Switch
+            checked={followersOnly}
+            onChange={setFollowersOnly}
+            className={`${
+              followersOnly ? "bg-blue-600" : "bg-gray-200"
+            } relative inline-flex h-6 w-11 items-center rounded-full`}
+          >
+            <span className="sr-only">Private</span>
+            <span
+              className={`${
+                followersOnly ? "translate-x-6" : "translate-x-1"
+              } inline-block h-4 w-4 transform rounded-full bg-white`}
+            />
+          </Switch> 
+          <div className="grow font-bold ml-4">Only my follows can view</div>
+        </div> }
       </form>
       <div className="flex flex-row space-x-4 mt-10">
         <button
@@ -162,7 +188,7 @@ function BoardForm({
           name="submit"
           className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg"
           onClick={() =>
-            submitForm({ title, description, logo, privateBoard: enabled })
+            submitForm({ title, description, logo, privateBoard: enabled, followersOnly })
           }
         >
           {initialValue ? "Update" : "Create"}
@@ -188,11 +214,13 @@ const MuseboardModal = NiceModal.create(() => {
     description,
     logo,
     privateBoard,
+    followersOnly
   }: {
     title: string;
     description: string;
     logo: File;
     privateBoard: boolean;
+    followersOnly: boolean;
   }) {
     if (!user) {
       window.alert("Not authenticated");
@@ -207,8 +235,10 @@ const MuseboardModal = NiceModal.create(() => {
         name: title,
         description,
         privateBoard,
+        followersOnly
       };
 
+      // Ensure that proper permissions are set on the encryption key
       if (privateBoard) {
         setLoading({ status: 1, message: "Validating encryption keys" });
         const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
@@ -264,12 +294,14 @@ const MuseboardModal = NiceModal.create(() => {
     description,
     logo,
     privateBoard,
+    followersOnly
   }: {
     board: any;
     title: string;
     description: string;
     logo: File;
     privateBoard: boolean;
+    followersOnly: boolean;
   }) {
     if (!user) {
       window.alert("Not authenticated");
@@ -285,7 +317,9 @@ const MuseboardModal = NiceModal.create(() => {
       payload.name = title;
       payload.description = description;
       payload.privateBoard = privateBoard;
+      payload.followersOnly = followersOnly;
 
+      // Ensure that proper permissions are set on encryption key
       if (privateBoard) {
         const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
         const wallet = await getEncryptionWallet();
@@ -304,7 +338,7 @@ const MuseboardModal = NiceModal.create(() => {
         setLoading({ status: 1, message: privateBoard ? "Fetching and encrypting tokens" : "Fetching and decrypting tokens" });
 
         const data = await getTokens(board.id);
-        await updateMetadata(board.id, 'tokens', data, privateBoard, setLoading);
+        await updateMetadata(board.id, 'tokens', data, privateBoard, followersOnly, setLoading);
       }
 
       if (logo) {
@@ -351,12 +385,16 @@ const MuseboardModal = NiceModal.create(() => {
     description,
     logo,
     privateBoard,
+    followersOnly
   }: {
     title: string;
     description: string;
     logo: File;
     privateBoard: boolean;
+    followersOnly: boolean
   }) {
+    console.log('upon submission', followersOnly);
+
     if (modal.args?.update) {
       return update({
         board: modal.args.data,
@@ -364,10 +402,11 @@ const MuseboardModal = NiceModal.create(() => {
         description,
         logo,
         privateBoard,
+        followersOnly
       });
     }
 
-    return createNew({ title, description, logo, privateBoard });
+    return createNew({ title, description, logo, privateBoard, followersOnly });
   }
 
   return (

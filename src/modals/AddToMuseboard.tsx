@@ -266,13 +266,13 @@ const AddToMuseboard = NiceModal.create(() => {
     }
   }
 
-  async function handleAddTokenToBoard(boardId: string, privateBoard: boolean) {
+  async function handleAddTokenToBoard(boardId: string, privateBoard: boolean, followersOnly: boolean) {
     setError(null);
     setLoading({ status: 1, message: "Uploading to IPFS" });
 
     try {
       const _board = addTokenToBoard(boardId, modal.args as TToken);
-      await updateMetadata(boardId, 'tokens', _board, privateBoard, setLoading);
+      await updateMetadata(boardId, 'tokens', _board, privateBoard, followersOnly, setLoading);
 
       modal.resolve({ boardId });
       modal.hide();
@@ -293,14 +293,15 @@ const AddToMuseboard = NiceModal.create(() => {
 
   async function handleRemoveTokenFromBoard(
     boardId: string,
-    privateBoard: boolean
+    privateBoard: boolean,
+    followersOnly: boolean
   ) {
     setError(null);
     setLoading({ status: 1, message: "Uploading to IPFS" });
 
     try {
       const _board = removeTokenFromBoard(boardId, modal.args as TToken);
-      await updateMetadata(boardId, 'tokens', _board, privateBoard, setLoading);
+      await updateMetadata(boardId, 'tokens', _board, privateBoard, followersOnly, setLoading);
 
       modal.resolve({ boardId });
       modal.hide();
@@ -362,10 +363,10 @@ const AddToMuseboard = NiceModal.create(() => {
                     board={board}
                     token={modal.args as TToken}
                     addToBoard={(boardId) =>
-                      handleAddTokenToBoard(boardId, board.privateBoard)
+                      handleAddTokenToBoard(boardId, board.privateBoard, board.followersOnly)
                     }
                     removeFromBoard={(boardId) =>
-                      handleRemoveTokenFromBoard(boardId, board.privateBoard)
+                      handleRemoveTokenFromBoard(boardId, board.privateBoard, board.followersOnly)
                     }
                   />
                 </li>

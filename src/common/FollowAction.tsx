@@ -13,6 +13,7 @@ import useUniversalProfile from "../hooks/useUniversalProfile";
 import { encodeValueType } from "@erc725/erc725.js/build/main/src/lib/encoder";
 import useFollowModule from "../hooks/useFollowModule";
 import { useQuery } from "@tanstack/react-query";
+import { getEncryptionWallet } from "../contexts/LitNetworkContext";
 
 const _FOLLOW_SYSTEM_ADDR = getAddress(import.meta.env.VITE_UP_FOLLOW_SYSTEM);
 
@@ -137,6 +138,36 @@ export default function FollowAction({
       return;
     }
 
+    const controller = localStorage.getItem('up-controller');
+
+    if (controller) {
+      const controllerPerms = await erc725.fetchData({
+        keyName: 'AddressPermissions:Permissions:<address>',
+        dynamicKeyParts: controller as string
+      });
+  
+      const perms = erc725.decodePermissions(controllerPerms.value as string);
+
+      if (!perms.ADDEXTENSIONS) {
+        keys.push(controllerPerms.key);
+        values.push(erc725.encodePermissions(Object.assign(perms, { ADDEXTENSIONS: true })));
+      }
+    }
+
+    const encWallet = await getEncryptionWallet();
+
+    if (encWallet.address) {
+      const controllerPerms = await erc725.fetchData({
+        keyName: 'AddressPermissions:Permissions:<address>',
+        dynamicKeyParts: encWallet.address
+      });
+
+      if (!erc725.checkPermissions('DECRYPT', controllerPerms.value as string)) {
+        keys.push(controllerPerms.key);
+        values.push(erc725.encodePermissions({ DECRYPT: true }));
+      }
+    }
+
     if (!readyToFollow.startFollowingExtension) {
       keys.push(_START_FOLLOWING_SELECTOR);
       values.push(_FOLLOW_SYSTEM_ADDR);
@@ -205,7 +236,7 @@ export default function FollowAction({
       <div className="p-2 rounded-xl text-center">
         <button
           onClick={() => setupFollowModule()}
-          className="w-full bg-gray-50 border-2 font-bold py-2 rounded-xl"
+          className="w-full backdrop-blur-lg bg-white/30 font-bold py-2 rounded-xl"
         >
           Setup Follow Module
         </button>

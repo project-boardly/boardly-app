@@ -2,7 +2,7 @@ import { useContract } from "./useContract";
 import { abi } from 'museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json';
 import { decodeKeyValue } from '@erc725/erc725.js/build/main/src/lib/utils';
 import useLitNetwork from "./useLitNetwork";
-import { getPrivateBoardConditions } from "../contexts/LitNetworkContext";
+import { getFollowerOnlyBoardConditions, getPrivateBoardConditions } from "../contexts/LitNetworkContext";
 import { useContext } from "react";
 import UserContext from "../contexts/UserContext";
 import { upload } from "../utils/ipfs";
@@ -48,25 +48,40 @@ export default function useMuseboard() {
     })
     .then(async (data) => {
       if (data.private) {
-        const tokens = await decrypt(data.ciphertext, data.hash, data.conditions);
+        try {
+          const tokens = await decrypt(data.ciphertext, data.hash, data.conditions, user?.uid as string);
 
-        data.tokens = JSON.parse(tokens);
+          data.tokens = JSON.parse(tokens);
+        } catch (err: any) {
+          if (err.status === 401)  {
+            data.encrypted = true;
+          }
+          else {
+            console.log(err)
+          }
+        }
       }
 
-      localStorage.setItem(`board:${boardId}`, JSON.stringify({ tokens: data.tokens }));
+      localStorage.setItem(`board:${boardId}`, JSON.stringify(data));
 
       return data;
     })
   }
 
-  async function updateMetadata(boardId: string, namespace: string, data: any, shouldEncrypt: boolean, onChange: (status: any) => void) {
-    const tokensData: any = { private: shouldEncrypt };
+  async function updateMetadata(boardId: string, namespace: string, data: any, shouldEncrypt: boolean, followersOnly: boolean, onChange: (status: any) => void) {
+    const tokensData: any = {
+      private: shouldEncrypt,
+      followersOnly
+    };
 
     if (shouldEncrypt) {
       onChange({ status: 1, message: "Encrypting tokens information" });
-      const conditions = getPrivateBoardConditions(user?.uid as string);
 
-      const { ciphertext, hash } = await encrypt(JSON.stringify(data.tokens || []), conditions);
+      const conditions = followersOnly ?
+        getFollowerOnlyBoardConditions(user?.uid as string) : 
+        getPrivateBoardConditions(user?.uid as string);
+
+      const { ciphertext, hash } = await encrypt(JSON.stringify(data.tokens || []), conditions, user?.uid as string);
 
       tokensData.ciphertext = ciphertext;
       tokensData.hash = hash;

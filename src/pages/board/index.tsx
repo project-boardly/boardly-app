@@ -20,12 +20,15 @@ import useUser from "../../hooks/useUser";
 import useFollowModule from "../../hooks/useFollowModule";
 import { useTransactionSender } from "../../hooks/transactions";
 import UserContext from "../../contexts/UserContext";
+import FollowAction from "../../common/FollowAction";
+import { ProfileCard } from "../profile";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
 }
 
-function BoardTokens({ boardId }: { boardId: string }) {
+function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
+  const user = useContext(UserContext);
   const { getTokens } = useMuseboard();
   const query = useQuery({
     queryKey: ["board:tokens", boardId],
@@ -47,10 +50,20 @@ function BoardTokens({ boardId }: { boardId: string }) {
 
       return data;
     },
+    refetchOnMount: false,
+    staleTime: 60 * 60
   });
 
   if (query.isLoading) {
     return <Loader />;
+  }
+
+  if (query.data.encrypted && query.data.followersOnly) {
+    return <div className="w-full p-16 bg-gray-50 flex flex-col justify-center text-center text-gray-500 space-y-4">
+      <p className="text-xl block">{"This is a private board :("}</p>
+      <div className="max-w-2xl mx-auto"><ProfileCard address={owner} followersInfo={false}/></div>
+      <p>Start following the creator to view this board.</p>
+    </div>
   }
 
   if (query.data.encrypted) {
@@ -363,7 +376,7 @@ export default function BoardPage() {
             </div>
           </div>
           <div className="max-w-7xl mx-auto px-8">
-            { (user || !query.data.privateBoard) && <BoardTokens boardId={boardId as string} /> }
+            { (user || !query.data.privateBoard) && <BoardTokens boardId={boardId as string} owner={query.data.owner} /> }
             { !user && query.data.privateBoard && <p>This is a private board.. connect wallet to check access</p>}
           </div>
         </main>

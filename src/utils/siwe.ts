@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { generateNonce, SiweMessage } from 'siwe';
 import { getAuth, signInWithCustomToken } from "firebase/auth";
+import { verifyMessage } from "ethers";
 
 export function createSiweMessage (address: string) {
   const domain = window.location.host;
@@ -26,6 +27,8 @@ export async function authenticate (account: string, provider: any) {
 
   try {
     const response = await axios.post(`${import.meta.env.VITE_API_HOST}/siwe/verify`, { signature, message });
+    const controller = verifyMessage(message, signature);
+    localStorage.setItem('up-controller', controller);
 
     const { token } = response.data;
 

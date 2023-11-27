@@ -9,9 +9,9 @@ function ipfsUrl(url: string) {
 
 function InlineProfile({ address }: { address: string }) {
   const { query } = useProfileQuery(address);
-
+  
   return (
-    <div className="flex space-x-4 group">
+    <a className="flex space-x-4 group" href={`/profile/${address}`} target="_blank">
       <div className="py-2">
         <img
           className="w-12 rounded-full"
@@ -28,7 +28,7 @@ function InlineProfile({ address }: { address: string }) {
         <p className="text-lg font-semibold align-middle h-max">{query.isLoading ? `${address.slice(0, 3)}...${address.slice(39)}` : query.data.name}</p>
       </div>
       <Address address={address} className="text-xs py-4"/>
-    </div>
+    </a>
   );
 }
 

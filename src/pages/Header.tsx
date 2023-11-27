@@ -10,9 +10,11 @@ import { Button, LinkButton } from "../common/buttons";
 import logo from "../logo.svg";
 import { ConnectWallet } from "../common/components";
 import UserContext from "../contexts/UserContext";
+import { useModal } from "@ebay/nice-modal-react";
 
 function NavActions() {
   const user = useContext(UserContext);
+  const search = useModal('search-modal');
 
   async function disconnect() {
     const auth = getAuth();
@@ -31,6 +33,9 @@ function NavActions() {
 
   return (
     <>
+      <Button onClick={() => search.show()}>
+        Search
+      </Button>
       <LinkButton to={`/profile/${user.uid}`}>
         <span className="sr-only">Profile</span>
         <svg

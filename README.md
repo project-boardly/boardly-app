@@ -2,7 +2,10 @@
 
 Museboard has something to offer for everyone in the community. Be it just exploring the content, or creating a network of people.
 
+### [View Contracts](https://github.com/kriss1897/museboard-contracts)
+
 Demo Videos:
+- [Complete Demo](https://www.youtube.com/watch?v=1wsMuEJwEnQ&t=3s)
 - [Basics of museboard and boards](https://www.loom.com/share/73bcd005c0f4455d8fc1a032a287816e?sid=c9cba008-c2ea-4bf1-98db-327ea5ac66e2)
 - [Basics of the follow system](https://www.loom.com/share/bdb6f03215d54d14956b9f5b8b258245?sid=ec25a3eb-996a-4cae-8dfe-a915f1483440)
 

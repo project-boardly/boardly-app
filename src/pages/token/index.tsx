@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useCollection } from "../../hooks/useCollection";
 import { useQuery } from "@tanstack/react-query";
 
@@ -9,6 +9,7 @@ const IPFS_GATEWAY = 'https://ipfs.io/ipfs/';
 import addIcon from "../../addIcon.svg";
 import { useModal } from "@ebay/nice-modal-react";
 import toast from "react-hot-toast";
+import { Loader } from "../../modals/AddToMuseboard";
 
 function TokenImages({ images }: { images: any[] }) {
   const url = images[0].url;
@@ -46,7 +47,7 @@ export default function Token() {
   }
 
   if (query.isLoading) {
-    return <p>Loading</p>;
+    return <Loader />;
   }
 
   if (!data) {
@@ -116,6 +117,12 @@ export default function Token() {
             >
               Set as Profile Picture
             </button> }
+            { <Link
+              to={`/collection/${chain}/${collection}`}
+              className="bg-white border-2 font-bold py-4 px-8 rounded-2xl hover:bg-white hover:shadow-lg"
+            >
+              View Collection
+            </Link> }
           </div>
           <div className="grid grid-cols-2">
             <div className="w-full">

@@ -7,7 +7,7 @@ import {
 
 import Layout from "./pages/Layout";
 
-import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { Collection } from "./pages/collection/Collection";
 import Explore from "./pages/explore/Explore";
 import Token from "./pages/token";
@@ -20,7 +20,7 @@ import Museboards from "./pages/profile/boards";
 import Assets from "./pages/profile/assets";
 import Universe from "./pages/profile/universe";
 
-const router = (queryClient: QueryClient) => createBrowserRouter(
+const router = () => createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
       <Route path="/" element={<Explore />} />
@@ -53,5 +53,5 @@ export default function Router () {
     });
   }, [loading, user]);
 
-  return <RouterProvider router={router(queryClient)} />
+  return <RouterProvider router={router()} />
 }

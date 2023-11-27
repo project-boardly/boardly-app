@@ -35,7 +35,7 @@ export default function NFTCard({
       .replace('https://ipfs.pixura.io/', 'https://ipfs.io/');
 
     if (url.startsWith('https://')) {
-      return `http://localhost:8080/300x,q90/${url}`
+      return `${import.meta.env.VITE_API_HOST}/300x,q90/${url}`
     }
 
     return url;

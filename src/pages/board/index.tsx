@@ -8,7 +8,6 @@ import { create } from "blockies-ts";
 import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 
 import { useModal } from "@ebay/nice-modal-react";
-import toast from "react-hot-toast";
 
 import NFTCard from "../../common/NFTCard";
 import { ConnectWallet } from "../../common/components";
@@ -20,7 +19,6 @@ import useUser from "../../hooks/useUser";
 import useFollowModule from "../../hooks/useFollowModule";
 import { useTransactionSender } from "../../hooks/transactions";
 import UserContext from "../../contexts/UserContext";
-import FollowAction from "../../common/FollowAction";
 import { ProfileCard } from "../profile";
 
 function ipfsUrl(url: string) {
@@ -28,7 +26,6 @@ function ipfsUrl(url: string) {
 }
 
 function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
-  const user = useContext(UserContext);
   const { getTokens } = useMuseboard();
   const query = useQuery({
     queryKey: ["board:tokens", boardId],

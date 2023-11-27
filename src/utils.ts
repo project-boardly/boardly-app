@@ -10,3 +10,11 @@ export const fetchTokens = async (chain: string, address: string, standard: stri
 
   return tokens;
 }
+
+export function groupProof () {
+  const worker = new ComlinkWorker<typeof import("./sw/proofWorker")>(
+    new URL("./sw/proofWorker", import.meta.url)
+  );
+
+  return worker.createProof();
+}

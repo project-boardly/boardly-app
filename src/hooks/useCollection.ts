@@ -76,7 +76,7 @@ export function useCollection (chain: string, address: string, standard?: string
     }
 
     if (uri.startsWith('http')) {
-      tokenUri = `http://localhost:3000/proxy?url=${encodeURIComponent(uri)}`;
+      tokenUri = `${import.meta.env.VITE_API_HOST}/proxy?url=${encodeURIComponent(uri)}`;
     }
 
     return fetch(tokenUri).then((res) => res.json())
@@ -91,9 +91,12 @@ export function useCollection (chain: string, address: string, standard?: string
 }
 
 function LSP7CollectionUtils(chain: string, address: string) {
+  chain;
   const erc725 = useErc725(address, LSP4DigitalAsset as ERC725JSONSchema[])
 
   async function fetchTokens(startAt = 0, pageSize = 20) {
+    startAt;
+    pageSize;
     return [];
   }
 
@@ -125,9 +128,14 @@ function LSP7CollectionUtils(chain: string, address: string) {
 }
 
 function LSP8CollectionUtils(chain: string, address: string) {
+  chain;
+    
   const erc725 = useErc725(address, LSP4DigitalAsset as ERC725JSONSchema[])
 
   async function fetchTokens(startAt = 0, pageSize = 20) {
+    startAt;
+    pageSize;
+
     return { data: [], cursor: null };
   }
 

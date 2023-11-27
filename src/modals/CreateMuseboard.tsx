@@ -105,6 +105,7 @@ function BoardForm({
   }
 
   function handleClose(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    e;
     setTitle("");
     setDescription("");
     setLogo(null);

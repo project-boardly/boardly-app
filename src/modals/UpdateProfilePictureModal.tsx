@@ -1,11 +1,11 @@
-import { Fragment, useContext, useEffect, useRef, useState } from "react";
+import { Fragment, useContext, useEffect, useState } from "react";
 import { Transition, Dialog } from "@headlessui/react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { useTransactionSender } from "../hooks/transactions";
 import { Loader } from "./AddToMuseboard";
 import useUniversalProfile from "../hooks/useUniversalProfile";
 import UserContext from "../contexts/UserContext";
-import { BrowserProvider, hexlify, keccak256, toUtf8Bytes } from "ethers";
+import { hexlify, keccak256, toUtf8Bytes } from "ethers";
 import { useCollection } from "../hooks/useCollection";
 import { useQuery } from "@tanstack/react-query";
 
@@ -29,7 +29,7 @@ const UpdateProfilePictureModal = NiceModal.create(() => {
     chain as string,
     collection as string
   );
-  const { data, ...query } = useQuery({
+  const { data } = useQuery({
     queryKey: ["chain", chain, "collection", collection, "token", tokenId],
     cacheTime: 60 * 60 * 1000,
     staleTime: 60 * 60 * 1000,
@@ -38,11 +38,8 @@ const UpdateProfilePictureModal = NiceModal.create(() => {
 
   const { sendTransaction } = useTransactionSender();
   const [loading, setLoading] = useState({ status: 1, message: "Loading" });
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
   const { contract: upContract, getProfileData } = useUniversalProfile(user?.uid as string);
-  const provider = window.ethereum
-    ? new BrowserProvider(window.ethereum)
-    : null;
   const [image, setImage] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string>("");
   const [imageDims, setDims] = useState({ height: 0, width: 0 });

@@ -119,6 +119,7 @@ export default function Explore() {
   const [tokensList, setTokensList] = useState<any>([]);
 
   const maybeLoadMore = useInfiniteLoader((startIdx, endIdx, currentItems) => {
+    endIdx;
     // console.log('load more', Date.now(), loadAfter, startIdx, endIdx);
     const timestamp = Date.now()
 

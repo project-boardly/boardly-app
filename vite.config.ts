@@ -36,5 +36,8 @@ export default defineConfig({
   },
   worker: {
     plugins: [comlink()]
+  },
+  build: {
+    sourcemap: false
   }
 });

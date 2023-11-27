@@ -23,6 +23,7 @@ function App() {
     document.addEventListener(
       "lit-ready",
       function (e) {
+        e;
         console.log("LIT network is ready");
       },
       false
@@ -32,6 +33,7 @@ function App() {
       document.removeEventListener(
         "lit-ready",
         function (e) {
+          e;
           console.log("Remove listner for LIT network");
         },
         false

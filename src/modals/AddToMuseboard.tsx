@@ -10,15 +10,12 @@ import { abi } from "museboard-contracts/artifacts/contracts/museboard.sol/Museb
 import { useContract } from "../hooks/useContract";
 import { useTransactionSender } from "../hooks/transactions";
 
-import toast from "react-hot-toast";
 import { useQuery } from "@tanstack/react-query";
 import useMuseboard from "../hooks/useMuseboard";
 import { create } from "blockies-ts";
 import { ConnectWallet } from "../common/components";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import UserContext from "../contexts/UserContext";
-import useLitNetwork from "../hooks/useLitNetwork";
-import { getPrivateBoardConditions } from "../contexts/LitNetworkContext";
 
 function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
@@ -217,7 +214,6 @@ const AddToMuseboard = NiceModal.create(() => {
   });
   const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
   const { sendTransaction } = useTransactionSender();
-  const { encrypt } = useLitNetwork();
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);
 

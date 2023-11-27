@@ -1,6 +1,6 @@
 import { Contract } from "ethers";
 
-import { ERC721, ERC1155, providers } from "./hooks/useCollection";
+import { ERC721, providers } from "./hooks/useCollection";
 
 const collections = [
   // {

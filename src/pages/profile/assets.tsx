@@ -16,6 +16,8 @@ import LSP8IdentifiableDigitalAsset from "@lukso/lsp-smart-contracts/artifacts/L
 import { useErc725 } from "../../hooks/useErc725";
 import { rpcProvider } from "../../hooks/useContract";
 import NFTCard from "../../common/NFTCard";
+import toast from "react-hot-toast";
+import { useModal } from "@ebay/nice-modal-react";
 
 function supportsInterface(collection: string, selector: string) {
   const contract = new Contract(collection, ERC165.abi, rpcProvider);
@@ -69,6 +71,7 @@ async function loadCollectionAssets(collection: string, address: string) {
 
 export default function Assets() {
   const { address } = useParams();
+  const modal = useModal('add-to-museboard');
   const erc725 = useErc725(
     address as string,
     LSP5ReceivedAssets as ERC725JSONSchema[]
@@ -87,9 +90,12 @@ export default function Assets() {
     retry: false
   });
 
-  useEffect(() => {
-    console.log(query.data);
-  }, [query.data]);
+  function addToMuseboard ({ chain, collection, tokenId, standard }: any) {
+    modal.show({ chain, collection, tokenId, standard })
+      .then(() => {
+        toast.success(<p>Token added to board</p>);
+      });
+  }
 
   return (
     <div>
@@ -107,7 +113,7 @@ export default function Assets() {
                 collection={data.collection}
                 tokenId={data.id}
                 name={data.name}
-                addToMuseboard={console.log}
+                addToMuseboard={() => addToMuseboard({ chain: 'lukso-testnet', collection: data.collection, standard: data.standard, tokenId: data.id })}
                 standard={data.standard}
               />
             );

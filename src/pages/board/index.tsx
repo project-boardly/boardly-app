@@ -95,6 +95,7 @@ function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
               chain={data.chain}
               tokenId={Number(data.tokenId)}
               collection={data.collection}
+              standard={data.standard}
             />
           );
         }}

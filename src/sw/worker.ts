@@ -8,7 +8,8 @@ import { ERC721, ERC1155 } from "../hooks/useCollection";
 
 const providers: any = {
   'ethereum': new JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/2eEiw8W63XB1bzIk-2XJHxPbZreVtM8V'),
-  'base': new JsonRpcProvider('https://mainnet.base.org')
+  'base': new JsonRpcProvider('https://mainnet.base.org'),
+  'lukso-testnet': new JsonRpcProvider('https://rpc.testnet.lukso.network')
 };
 
 type CollectionMeta = {

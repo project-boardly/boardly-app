@@ -10,10 +10,10 @@ Demo Videos:
 - [Basics of the follow system](https://www.loom.com/share/bdb6f03215d54d14956b9f5b8b258245?sid=ec25a3eb-996a-4cae-8dfe-a915f1483440)
 
 Key Learnings:
-- Alignment with key principles if key. If I was completely aligned with the core principles that Lukso works on, I would have been able to think clearly.. and escape the mindset that I've built from other web3 and web2 development.
+- Alignment with key principles is key. If I was completely aligned with the core principles that Lukso works on, I would have been able to think clearly.. and escape the mindset that I've built from other web3 and web2 development.
 - Use the UP to store data or reference to data. We learned this halfway through our development. Even though we store boards as NFT tokens, it would have been perfectly fine just to store then in an array. (Don't let the web3 mindset take over.)
-- You don't always need extensions. Sometime you can just use LSP1 and handle things with notifications. This lesson is related to the follow module. Our follow module is build around extensions (LSP17) only. However while building it, I realised taht LSP1 in combination with LSP17 would have given a better working product.
-- Parse solidity errors.. and know that you can inspect the extension network calls as well. We spent days debugging issues, because in tests everything was working, but in production it was not. Turned out the UP Extension had a bug, and didn't return revert data for certain calls.
+- You don't always need extensions. Sometime you can just use LSP1 and handle things with notifications. This lesson is related to the follow module. The follow module is build around extensions (LSP17) only. However while building it, I realised that LSP1 in combination with LSP17 would have given a better working product.
+- Parse solidity errors.. and know that you can inspect the extension's network calls as well. I spent days debugging issues, because in tests everything was working, but in production it was not. Turned out the UP Extension had a bug, and didn't return revert data for certain calls.
 
 Features:
 - Explore tokens from all around web3, directly from information that is stored on-chain. The explore page of museboard has an infinite loading list of content from different chains so that you are never limited in for quests.

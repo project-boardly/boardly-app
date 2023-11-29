@@ -29,3 +29,8 @@ Features:
   - Follower only museboards.
 
 - [In-progress, not complete] We've also experimented with stored PCDs with Universal Profile. These PCDs can we encrypted and stored directly on universal profile. And these can then later to be use to do ZK Proofs for building privacy focused reputation systems.
+
+
+### Follow System Diagram
+
+![Follow System Diagram](https://cdn.discordapp.com/attachments/1024295793781383288/1179388228575436850/Screenshot_2023-11-29_at_5.16.27_PM.png?ex=657999e1&is=656724e1&hm=2fcfac353a0da933c072df4f8a168496cd8a464e27309dcbe34ae5ef10e8e0d6&)

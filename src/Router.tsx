@@ -39,19 +39,19 @@ const router = () => createBrowserRouter(
 export default function Router () {
   const { loading, user } = useUser();
   const queryClient = useQueryClient();
-  const { getBoards } = useMuseboard();
+  // const { getBoards } = useMuseboard();
 
-  useEffect(() => {
-    if (loading) { return; }
+  // useEffect(() => {
+  //   if (loading) { return; }
 
-    if (!user) { return; }
+  //   if (!user) { return; }
 
-    queryClient.prefetchQuery({
-      queryKey: ['onchain:boards', user.uid],
-      queryFn: () => getBoards(user.uid as string),
-      staleTime: 1 * 24 * 60 * 60
-    });
-  }, [loading, user]);
+  //   queryClient.prefetchQuery({
+  //     queryKey: ['onchain:boards', user.uid],
+  //     queryFn: () => getBoards(user.uid as string),
+  //     staleTime: 1 * 24 * 60 * 60
+  //   });
+  // }, [loading, user]);
 
   return <RouterProvider router={router()} />
 }

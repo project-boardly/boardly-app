@@ -2,7 +2,7 @@
 
 Museboard has something to offer for everyone in the community. Be it just exploring the content, or creating a network of people.
 
-### [View Contracts](https://github.com/kriss1897/museboard-contracts)
+### [View Contracts](https://github.com/kriss1897/boardly-contracts)
 
 Demo Videos:
 - [Complete Demo](https://www.youtube.com/watch?v=1wsMuEJwEnQ&t=3s)

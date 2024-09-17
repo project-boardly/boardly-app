@@ -143,9 +143,9 @@ export function ProfileCard({
           <div className="py-4">
             <p className="">{query.data.description}</p>
           </div>
-          {!authUserLoading && user && user.uid !== address && (
+          {/* {!authUserLoading && user && user.uid !== address && (
             <FollowAction address={getAddress(user.uid)} target={address} />
-          )}
+          )} */}
         </div>
       </div>
     </div>

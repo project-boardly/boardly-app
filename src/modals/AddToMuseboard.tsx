@@ -6,7 +6,7 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { TBoard, TToken, matchTokens, useBoardsQuery } from "../queries/boards";
 
 import { upload } from "../utils/ipfs";
-import { abi } from "museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json";
+import { abi } from "boardly-contracts/artifacts/contracts/Museboard.sol/Museboard.json";
 import { useContract } from "../hooks/useContract";
 import { useTransactionSender } from "../hooks/transactions";
 
@@ -68,7 +68,7 @@ function InlineMuseboard({
           seed: `${board?.owner}:${board.id}`,
           scale: 40,
           bgcolor: "#f1f1f1",
-        }).toDataURL()
+        }).toDataURL(),
   );
   const [tokenExists, setTokenExists] = useState(false);
 
@@ -80,7 +80,7 @@ function InlineMuseboard({
     const tokens = query.data.tokens || [];
 
     const matchedToken = tokens.find((_target: TToken) =>
-      matchTokens(_target, token)
+      matchTokens(_target, token),
     );
 
     setTokenExists(!!matchedToken);
@@ -256,13 +256,24 @@ const AddToMuseboard = NiceModal.create(() => {
     }
   }
 
-  async function handleAddTokenToBoard(boardId: string, privateBoard: boolean, followersOnly: boolean) {
+  async function handleAddTokenToBoard(
+    boardId: string,
+    privateBoard: boolean,
+    followersOnly: boolean,
+  ) {
     setError(null);
     setLoading({ status: 1, message: "Uploading to IPFS" });
 
     try {
       const _board = addTokenToBoard(boardId, modal.args as TToken);
-      await updateMetadata(boardId, 'tokens', _board, privateBoard, followersOnly, setLoading);
+      await updateMetadata(
+        boardId,
+        "tokens",
+        _board,
+        privateBoard,
+        followersOnly,
+        setLoading,
+      );
 
       modal.resolve({ boardId });
       modal.hide();
@@ -284,14 +295,21 @@ const AddToMuseboard = NiceModal.create(() => {
   async function handleRemoveTokenFromBoard(
     boardId: string,
     privateBoard: boolean,
-    followersOnly: boolean
+    followersOnly: boolean,
   ) {
     setError(null);
     setLoading({ status: 1, message: "Uploading to IPFS" });
 
     try {
       const _board = removeTokenFromBoard(boardId, modal.args as TToken);
-      await updateMetadata(boardId, 'tokens', _board, privateBoard, followersOnly, setLoading);
+      await updateMetadata(
+        boardId,
+        "tokens",
+        _board,
+        privateBoard,
+        followersOnly,
+        setLoading,
+      );
 
       modal.resolve({ boardId });
       modal.hide();
@@ -353,10 +371,18 @@ const AddToMuseboard = NiceModal.create(() => {
                     board={board}
                     token={modal.args as TToken}
                     addToBoard={(boardId) =>
-                      handleAddTokenToBoard(boardId, board.privateBoard, board.followersOnly)
+                      handleAddTokenToBoard(
+                        boardId,
+                        board.privateBoard,
+                        board.followersOnly,
+                      )
                     }
                     removeFromBoard={(boardId) =>
-                      handleRemoveTokenFromBoard(boardId, board.privateBoard, board.followersOnly)
+                      handleRemoveTokenFromBoard(
+                        boardId,
+                        board.privateBoard,
+                        board.followersOnly,
+                      )
                     }
                   />
                 </li>
@@ -402,7 +428,7 @@ const AddToMuseboard = NiceModal.create(() => {
                   as="h2"
                   className="text-2xl pl-4 font-medium leading-6 text-gray-900 text-center"
                 >
-                  Add to museboard
+                  Add to Board
                 </Dialog.Title>
                 <Dialog.Description
                   as="p"

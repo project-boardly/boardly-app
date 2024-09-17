@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Contract, getAddress, zeroPadValue } from "ethers";
 import { useTransactionSender } from "../hooks/transactions";
 
-import FollowModule from "museboard-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json";
+import FollowModule from "boardly-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json";
 
 import KeyManagerSchema from "@erc725/erc725.js/schemas/LSP6KeyManager.json";
 import LSP17ExtensionSchema from "@erc725/erc725.js/schemas/LSP17ContractExtension.json";
@@ -47,12 +47,15 @@ export default function FollowAction({
   const { isFollowing } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
   const erc725 = useErc725(
     address,
-    KeyManagerSchema.concat(LSP17ExtensionSchema) as ERC725JSONSchema[]
+    KeyManagerSchema.concat(LSP17ExtensionSchema) as ERC725JSONSchema[],
   );
   const [loading, setLoading] = useState(true);
   const { sendTransaction } = useTransactionSender();
   const [readyToFollow, setRTF] = useState<ReadyToFollow>();
-  const query = useQuery({ queryKey: ['is-following', target], queryFn:() => isFollowing(targetAddr, address, _FOLLOW_SYSTEM_ADDR) })
+  const query = useQuery({
+    queryKey: ["is-following", target],
+    queryFn: () => isFollowing(targetAddr, address, _FOLLOW_SYSTEM_ADDR),
+  });
 
   useEffect(() => {
     isReadyToFollow().then((rtfStatus: ReadyToFollow) => {
@@ -91,11 +94,11 @@ export default function FollowAction({
       status.permissions =
         erc725.checkPermissions(
           ["SETDATA", "REENTRANCY"],
-          permissions.value as string
+          permissions.value as string,
         ) ||
         erc725.checkPermissions(
           ["SUPER_SETDATA", "REENTRANCY"],
-          permissions.value as string
+          permissions.value as string,
         );
     }
 
@@ -138,19 +141,23 @@ export default function FollowAction({
       return;
     }
 
-    const controller = localStorage.getItem('up-controller');
+    const controller = localStorage.getItem("up-controller");
 
     if (controller) {
       const controllerPerms = await erc725.fetchData({
-        keyName: 'AddressPermissions:Permissions:<address>',
-        dynamicKeyParts: controller as string
+        keyName: "AddressPermissions:Permissions:<address>",
+        dynamicKeyParts: controller as string,
       });
-  
+
       const perms = erc725.decodePermissions(controllerPerms.value as string);
 
       if (!perms.ADDEXTENSIONS) {
         keys.push(controllerPerms.key);
-        values.push(erc725.encodePermissions(Object.assign(perms, { ADDEXTENSIONS: true })));
+        values.push(
+          erc725.encodePermissions(
+            Object.assign(perms, { ADDEXTENSIONS: true }),
+          ),
+        );
       }
     }
 
@@ -158,11 +165,13 @@ export default function FollowAction({
 
     if (encWallet.address) {
       const controllerPerms = await erc725.fetchData({
-        keyName: 'AddressPermissions:Permissions:<address>',
-        dynamicKeyParts: encWallet.address
+        keyName: "AddressPermissions:Permissions:<address>",
+        dynamicKeyParts: encWallet.address,
       });
 
-      if (!erc725.checkPermissions('DECRYPT', controllerPerms.value as string)) {
+      if (
+        !erc725.checkPermissions("DECRYPT", controllerPerms.value as string)
+      ) {
         keys.push(controllerPerms.key);
         values.push(erc725.encodePermissions({ DECRYPT: true }));
       }
@@ -181,19 +190,19 @@ export default function FollowAction({
     keys.push(
       erc725.encodeKeyName(
         "AddressPermissions:Permissions:<address>",
-        _FOLLOW_SYSTEM_ADDR
-      )
+        _FOLLOW_SYSTEM_ADDR,
+      ),
     );
     values.push(erc725.encodePermissions({ SETDATA: true, REENTRANCY: true }));
 
     keys.push(
       erc725.encodeKeyName(
         "AddressPermissions:AllowedERC725YDataKeys:<address>",
-        _FOLLOW_SYSTEM_ADDR
-      )
+        _FOLLOW_SYSTEM_ADDR,
+      ),
     );
     values.push(
-      encodeValueType("bytes[CompactBytesArray]", _REQUIRED_DATA_KEYS)
+      encodeValueType("bytes[CompactBytesArray]", _REQUIRED_DATA_KEYS),
     );
 
     sendTransaction(contract, "setDataBatch", [keys, values]);
@@ -206,11 +215,12 @@ export default function FollowAction({
 
     const data = followModuleContract.interface.encodeFunctionData(
       "startFollowing",
-      [targetAddr]
+      [targetAddr],
     );
 
-    sendTransaction(contract, "execute", [0, address, 0, data])
-      .then(() => query.refetch());
+    sendTransaction(contract, "execute", [0, address, 0, data]).then(() =>
+      query.refetch(),
+    );
   }
 
   async function unfollowProfile() {
@@ -220,11 +230,12 @@ export default function FollowAction({
 
     const data = followModuleContract.interface.encodeFunctionData(
       "stopFollowing",
-      [targetAddr]
+      [targetAddr],
     );
 
-    sendTransaction(contract, "execute", [0, address, 0, data])
-      .then(() => query.refetch());
+    sendTransaction(contract, "execute", [0, address, 0, data]).then(() =>
+      query.refetch(),
+    );
   }
 
   if (loading || query.isLoading) {

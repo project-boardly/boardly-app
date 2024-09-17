@@ -10,8 +10,8 @@ import { TToken, useBoardsQuery } from "../queries/boards";
 
 import safeGet from "lodash/get";
 
-import { abi } from "museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json";
-import LSP6KeyManager from '@erc725/erc725.js/schemas/LSP6KeyManager.json';
+import { abi } from "boardly-contracts/artifacts/contracts/Museboard.sol/Museboard.json";
+import LSP6KeyManager from "@erc725/erc725.js/schemas/LSP6KeyManager.json";
 
 import useUser from "../hooks/useUser";
 import { Loader } from "./AddToMuseboard";
@@ -82,14 +82,14 @@ function BoardForm({
 }) {
   const [title, setTitle] = useState(safeGet(initialValue, "name", ""));
   const [description, setDescription] = useState(
-    safeGet(initialValue, "description", "")
+    safeGet(initialValue, "description", ""),
   );
   const [logo, setLogo] = useState(null);
   const [enabled, setEnabled] = useState(
-    safeGet(initialValue, "privateBoard", false)
+    safeGet(initialValue, "privateBoard", false),
   );
   const [followersOnly, setFollowersOnly] = useState(
-    safeGet(initialValue, "followersOnly", false)
+    safeGet(initialValue, "followersOnly", false),
   );
 
   useEffect(() => {
@@ -101,7 +101,13 @@ function BoardForm({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    submitForm({ title, description, logo, privateBoard: enabled, followersOnly });
+    submitForm({
+      title,
+      description,
+      logo,
+      privateBoard: enabled,
+      followersOnly,
+    });
   }
 
   function handleClose(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
@@ -158,23 +164,25 @@ function BoardForm({
           </Switch>
           <div className="grow font-bold ml-4">Hide from others</div>
         </div>
-        { enabled && <div className="flex flex-row mt-4">
-          <Switch
-            checked={followersOnly}
-            onChange={setFollowersOnly}
-            className={`${
-              followersOnly ? "bg-blue-600" : "bg-gray-200"
-            } relative inline-flex h-6 w-11 items-center rounded-full`}
-          >
-            <span className="sr-only">Private</span>
-            <span
+        {enabled && (
+          <div className="flex flex-row mt-4">
+            <Switch
+              checked={followersOnly}
+              onChange={setFollowersOnly}
               className={`${
-                followersOnly ? "translate-x-6" : "translate-x-1"
-              } inline-block h-4 w-4 transform rounded-full bg-white`}
-            />
-          </Switch> 
-          <div className="grow font-bold ml-4">Only my follows can view</div>
-        </div> }
+                followersOnly ? "bg-blue-600" : "bg-gray-200"
+              } relative inline-flex h-6 w-11 items-center rounded-full`}
+            >
+              <span className="sr-only">Private</span>
+              <span
+                className={`${
+                  followersOnly ? "translate-x-6" : "translate-x-1"
+                } inline-block h-4 w-4 transform rounded-full bg-white`}
+              />
+            </Switch>
+            <div className="grow font-bold ml-4">Only my follows can view</div>
+          </div>
+        )}
       </form>
       <div className="flex flex-row space-x-4 mt-10">
         <button
@@ -189,7 +197,13 @@ function BoardForm({
           name="submit"
           className="w-full bg-black text-white font-bold py-2 rounded-xl shadow-lg"
           onClick={() =>
-            submitForm({ title, description, logo, privateBoard: enabled, followersOnly })
+            submitForm({
+              title,
+              description,
+              logo,
+              privateBoard: enabled,
+              followersOnly,
+            })
           }
         >
           {initialValue ? "Update" : "Create"}
@@ -208,14 +222,16 @@ const MuseboardModal = NiceModal.create(() => {
   const { sendTransaction } = useTransactionSender();
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);
-  const { contract: upContract } = useUniversalProfile(modal.args?.authUser as string);
+  const { contract: upContract } = useUniversalProfile(
+    modal.args?.authUser as string,
+  );
 
   async function createNew({
     title,
     description,
     logo,
     privateBoard,
-    followersOnly
+    followersOnly,
   }: {
     title: string;
     description: string;
@@ -236,7 +252,7 @@ const MuseboardModal = NiceModal.create(() => {
         name: title,
         description,
         privateBoard,
-        followersOnly
+        followersOnly,
       };
 
       // Ensure that proper permissions are set on the encryption key
@@ -245,13 +261,25 @@ const MuseboardModal = NiceModal.create(() => {
         const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
         const wallet = await getEncryptionWallet();
 
-        const permissions = await erc.fetchData({ keyName: 'AddressPermissions:Permissions:<address>', dynamicKeyParts: wallet.address });
+        const permissions = await erc.fetchData({
+          keyName: "AddressPermissions:Permissions:<address>",
+          dynamicKeyParts: wallet.address,
+        });
         const requiredPermissions = erc.encodePermissions({ DECRYPT: true });
-        const permissionKey = erc.encodeKeyName('AddressPermissions:Permissions:<address>', wallet.address);
+        const permissionKey = erc.encodeKeyName(
+          "AddressPermissions:Permissions:<address>",
+          wallet.address,
+        );
 
         if (!permissions.value) {
-          setLoading({ status: 1, message: "Setting encryption keys on Profile" });
-          await sendTransaction(upContract, 'setData', [permissionKey, requiredPermissions]);
+          setLoading({
+            status: 1,
+            message: "Setting encryption keys on Profile",
+          });
+          await sendTransaction(upContract, "setData", [
+            permissionKey,
+            requiredPermissions,
+          ]);
         }
       }
 
@@ -295,7 +323,7 @@ const MuseboardModal = NiceModal.create(() => {
     description,
     logo,
     privateBoard,
-    followersOnly
+    followersOnly,
   }: {
     board: any;
     title: string;
@@ -325,21 +353,45 @@ const MuseboardModal = NiceModal.create(() => {
         const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
         const wallet = await getEncryptionWallet();
 
-        const permissions = await erc.fetchData({ keyName: 'AddressPermissions:Permissions:<address>', dynamicKeyParts: wallet.address });
+        const permissions = await erc.fetchData({
+          keyName: "AddressPermissions:Permissions:<address>",
+          dynamicKeyParts: wallet.address,
+        });
         const requiredPermissions = erc.encodePermissions({ DECRYPT: true });
-        const permissionKey = erc.encodeKeyName('AddressPermissions:Permissions:<address>', wallet.address);
+        const permissionKey = erc.encodeKeyName(
+          "AddressPermissions:Permissions:<address>",
+          wallet.address,
+        );
 
         if (!permissions.value) {
-          setLoading({ status: 1, message: "Setting encryption keys on Profile" });
-          await sendTransaction(upContract, 'setData', [permissionKey, requiredPermissions]);
+          setLoading({
+            status: 1,
+            message: "Setting encryption keys on Profile",
+          });
+          await sendTransaction(upContract, "setData", [
+            permissionKey,
+            requiredPermissions,
+          ]);
         }
       }
 
       if (privateBoard !== !(modal.args?.data as any).privateBoard) {
-        setLoading({ status: 1, message: privateBoard ? "Fetching and encrypting tokens" : "Fetching and decrypting tokens" });
+        setLoading({
+          status: 1,
+          message: privateBoard
+            ? "Fetching and encrypting tokens"
+            : "Fetching and decrypting tokens",
+        });
 
         const data = await getTokens(board.id);
-        await updateMetadata(board.id, 'tokens', data, privateBoard, followersOnly, setLoading);
+        await updateMetadata(
+          board.id,
+          "tokens",
+          data,
+          privateBoard,
+          followersOnly,
+          setLoading,
+        );
       }
 
       if (logo) {
@@ -386,15 +438,15 @@ const MuseboardModal = NiceModal.create(() => {
     description,
     logo,
     privateBoard,
-    followersOnly
+    followersOnly,
   }: {
     title: string;
     description: string;
     logo: File;
     privateBoard: boolean;
-    followersOnly: boolean
+    followersOnly: boolean;
   }) {
-    console.log('upon submission', followersOnly);
+    console.log("upon submission", followersOnly);
 
     if (modal.args?.update) {
       return update({
@@ -403,7 +455,7 @@ const MuseboardModal = NiceModal.create(() => {
         description,
         logo,
         privateBoard,
-        followersOnly
+        followersOnly,
       });
     }
 

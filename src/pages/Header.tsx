@@ -83,7 +83,7 @@ export default function Header() {
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center">
                 <Link to="/" className="flex-shrink-0">
-                  <img src={logo} alt="Museboard" />
+                  <img style={{ height: '24px' }} src={logo} alt="Museboard" />
                 </Link>
               </div>
               <div className="grow"></div>

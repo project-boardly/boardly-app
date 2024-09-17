@@ -1,8 +1,11 @@
 import { useContract } from "./useContract";
-import { abi } from 'museboard-contracts/artifacts/contracts/museboard.sol/Museboard.json';
-import { decodeKeyValue } from '@erc725/erc725.js/build/main/src/lib/utils';
+import { abi } from "boardly-contracts/artifacts/contracts/Museboard.sol/Museboard.json";
+import { decodeKeyValue } from "@erc725/erc725.js/build/main/src/lib/utils";
 import useLitNetwork from "./useLitNetwork";
-import { getFollowerOnlyBoardConditions, getPrivateBoardConditions } from "../contexts/LitNetworkContext";
+import {
+  getFollowerOnlyBoardConditions,
+  getPrivateBoardConditions,
+} from "../contexts/LitNetworkContext";
 import { useContext } from "react";
 import UserContext from "../contexts/UserContext";
 import { upload } from "../utils/ipfs";
@@ -20,7 +23,7 @@ export default function useMuseboard() {
 
   async function getBoards(address: string) {
     const boardIds = await contract.tokenIdsOf(address);
-    const boards = await Promise.all(boardIds.map(getMetadata))
+    const boards = await Promise.all(boardIds.map(getMetadata));
 
     return boards.map((board) => Object.assign({ owner: address }, board));
   }
@@ -28,72 +31,100 @@ export default function useMuseboard() {
   async function getMetadata(boardId: string) {
     const owner = contract.tokenOwnerOf(boardId);
 
-    return contract.getMetadata('metadata', boardId)
+    return contract
+      .getMetadata("metadata", boardId)
       .then((metadata) => {
-        const { url } = decodeKeyValue('JSONURL', 'bytes', metadata, 'metadata');
+        const { url } = decodeKeyValue(
+          "JSONURL",
+          "bytes",
+          metadata,
+          "metadata",
+        );
 
-        return fetch(ipfsUrl(url)).then(res => res.json());
+        return fetch(ipfsUrl(url)).then((res) => res.json());
       })
-      .then(async (metadata) => Object.assign(metadata, { id: boardId, owner: await owner }));
+      .then(async (metadata) =>
+        Object.assign(metadata, { id: boardId, owner: await owner }),
+      );
   }
 
   async function getTokens(boardId: string) {
-    return contract.getMetadata('tokens', boardId)
-    .then((metadata) => {
-      const data = decodeKeyValue('JSONURL', 'bytes', metadata, 'metadata');
+    return contract
+      .getMetadata("tokens", boardId)
+      .then((metadata) => {
+        const data = decodeKeyValue("JSONURL", "bytes", metadata, "metadata");
 
-      if (!data) { return { tokens: [] }; }
+        if (!data) {
+          return { tokens: [] };
+        }
 
-      return fetch(ipfsUrl(data.url)).then(res => res.json());
-    })
-    .then(async (data) => {
-      if (data.private) {
-        try {
-          const tokens = await decrypt(data.ciphertext, data.hash, data.conditions, user?.uid as string);
+        return fetch(ipfsUrl(data.url)).then((res) => res.json());
+      })
+      .then(async (data) => {
+        if (data.private) {
+          try {
+            const tokens = await decrypt(
+              data.ciphertext,
+              data.hash,
+              data.conditions,
+              user?.uid as string,
+            );
 
-          data.tokens = JSON.parse(tokens);
-        } catch (err: any) {
-          if (err.status === 401)  {
-            data.encrypted = true;
-          }
-          else {
-            console.log(err)
+            data.tokens = JSON.parse(tokens);
+          } catch (err: any) {
+            if (err.status === 401) {
+              data.encrypted = true;
+            } else {
+              console.log(err);
+            }
           }
         }
-      }
 
-      localStorage.setItem(`board:${boardId}`, JSON.stringify(data));
+        localStorage.setItem(`board:${boardId}`, JSON.stringify(data));
 
-      return data;
-    })
+        return data;
+      });
   }
 
-  async function updateMetadata(boardId: string, namespace: string, data: any, shouldEncrypt: boolean, followersOnly: boolean, onChange: (status: any) => void) {
+  async function updateMetadata(
+    boardId: string,
+    namespace: string,
+    data: any,
+    shouldEncrypt: boolean,
+    followersOnly: boolean,
+    onChange: (status: any) => void,
+  ) {
     const tokensData: any = {
       private: shouldEncrypt,
-      followersOnly
+      followersOnly,
     };
 
     if (shouldEncrypt) {
       onChange({ status: 1, message: "Encrypting tokens information" });
 
-      const conditions = followersOnly ?
-        getFollowerOnlyBoardConditions(user?.uid as string) : 
-        getPrivateBoardConditions(user?.uid as string);
+      const conditions = followersOnly
+        ? getFollowerOnlyBoardConditions(user?.uid as string)
+        : getPrivateBoardConditions(user?.uid as string);
 
-      const { ciphertext, hash } = await encrypt(JSON.stringify(data.tokens || []), conditions, user?.uid as string);
+      const { ciphertext, hash } = await encrypt(
+        JSON.stringify(data.tokens || []),
+        conditions,
+        user?.uid as string,
+      );
 
       tokensData.ciphertext = ciphertext;
       tokensData.hash = hash;
       tokensData.conditions = conditions;
-    }
-    else {
+    } else {
       tokensData.tokens = data.tokens;
     }
 
     const tokens = await upload(tokensData);
 
-    onChange({ status: 1, message: `Commiting ${shouldEncrypt ? 'encrypted' : ''} tokens to blockchain` });
+    onChange({
+      status: 1,
+      message: `Commiting ${shouldEncrypt ? "encrypted" : ""} tokens to blockchain`,
+    });
     await sendTransaction(contract, "updateMetadata", [
       namespace,
       boardId,

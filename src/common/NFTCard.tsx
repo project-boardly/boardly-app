@@ -127,7 +127,7 @@ export default function NFTCard({
             onClick={() => addToMuseboard()}
             className="bg-black text-white font-bold py-4 shadow-lg w-full rounded-2xl"
           >
-            Add to museboard
+            Add to board
           </button> }
         </div>
       </div>

@@ -70,7 +70,7 @@ export default function Token() {
               onClick={handleAddToMuseboard}
               className="px-4 py-2 bg-gray-200 rounded-lg text-black"
             >
-              Add to museboard
+              Add to Board
             </button>
             <button className="px-4 py-2 bg-gray-200 rounded-lg text-black">
               Share
@@ -109,7 +109,7 @@ export default function Token() {
               className="bg-black text-white font-bold py-4 px-8 shadow-lg rounded-2xl"
             >
               <img className="inline mr-4" alt="Add" src={addIcon} />
-              Add to museboard
+              Add to Board
             </button>
             { <button
               onClick={() => pfpModal.show({ chain, collection, tokenId, name: data.name })}

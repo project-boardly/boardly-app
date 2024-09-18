@@ -1,10 +1,10 @@
-import luksoModule from '@lukso/web3-onboard-config';
-import injectedMudule from '@web3-onboard/injected-wallets';
+import luksoModule from "@lukso/web3-onboard-config";
+import injectedMudule from "@web3-onboard/injected-wallets";
 import { ConnectModalOptions } from "@web3-onboard/core/dist/types";
 
-import { init as initWeb3Onboard } from '@web3-onboard/react'
+import { init as initWeb3Onboard } from "@web3-onboard/react";
 
-import logo from '../logo.svg';
+import logo from "../logo.svg";
 
 const lukso = luksoModule();
 
@@ -21,7 +21,7 @@ const injected = injectedMudule({
     }, []);
     return sorted;
   },
-  displayUnavailable: ["Universal Profile"]
+  displayUnavailable: ["Universal Profile"],
 });
 
 const wallets = [injected];
@@ -29,15 +29,9 @@ const wallets = [injected];
 const chains = [
   {
     id: 42,
-    token: 'LYX',
+    token: "LYX",
     label: "LUKSO Mainnet",
-    rpcUrl: 'https://rpc.lukso.gateway.fm/'
-  },
-  {
-    id: 4201,
-    token: "LYXt",
-    label: "LUKSO Testnet",
-    rpcUrl: "https://rpc.testnet.lukso.gateway.fm/",
+    rpcUrl: "https://rpc.lukso.gateway.fm/",
   },
 ];
 
@@ -59,10 +53,10 @@ const connect: ConnectModalOptions = {
     "https://chrome.google.com/webstore/detail/universal-profiles/abpickdkkbnbcoepogfhkhennhfhehfn?hl=en",
   removeWhereIsMyWalletWarning: true,
   showSidebar: true,
-  disableClose: true
+  disableClose: true,
 };
 
-export function init(){
+export function init() {
   return initWeb3Onboard({
     wallets,
     chains,
@@ -71,13 +65,13 @@ export function init(){
     accountCenter: {
       desktop: {
         enabled: false,
-        position: 'topRight',
-        minimal: true
+        position: "topRight",
+        minimal: true,
       },
       mobile: {
         enabled: false,
-        position: 'bottomRight'
+        position: "bottomRight",
       },
-    }
+    },
   });
 }

@@ -84,7 +84,7 @@ export function useCollection(
     }
 
     if (uri.startsWith("http")) {
-      tokenUri = `${import.meta.env.VITE_API_HOST}/proxy?url=${encodeURIComponent(uri)}`;
+      tokenUri = `http://localhost:3000/${btoa(uri)}`;
     }
 
     return fetch(tokenUri).then((res) => res.json());

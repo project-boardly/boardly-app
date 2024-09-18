@@ -25,7 +25,7 @@ function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
 }
 
-function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
+function BoardTokens({ boardId, owner }: { boardId: string; owner: string }) {
   const { getTokens } = useMuseboard();
   const query = useQuery({
     queryKey: ["board:tokens", boardId],
@@ -33,14 +33,13 @@ function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
       let data: any = { tokens: [] };
 
       try {
-        data = await getTokens(boardId as string)
+        data = await getTokens(boardId as string);
       } catch (error: any) {
         console.log(error);
 
         if (error.status === 401) {
           data.encrypted = true;
-        }
-        else {
+        } else {
           console.log(error);
         }
       }
@@ -48,7 +47,7 @@ function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
       return data;
     },
     refetchOnMount: false,
-    staleTime: 60 * 60
+    staleTime: 60 * 60,
   });
 
   if (query.isLoading) {
@@ -56,11 +55,15 @@ function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
   }
 
   if (query.data.encrypted && query.data.followersOnly) {
-    return <div className="w-full p-16 bg-gray-50 flex flex-col justify-center text-center text-gray-500 space-y-4">
-      <p className="text-xl block">{"This is a private board :("}</p>
-      <div className="max-w-2xl mx-auto"><ProfileCard address={owner} followersInfo={false}/></div>
-      <p>Start following the creator to view this board.</p>
-    </div>
+    return (
+      <div className="w-full p-16 bg-gray-50 flex flex-col justify-center text-center text-gray-500 space-y-4">
+        <p className="text-xl block">{"This is a private board :("}</p>
+        <div className="max-w-2xl mx-auto">
+          <ProfileCard address={owner} followersInfo={false} />
+        </div>
+        <p>Start following the creator to view this board.</p>
+      </div>
+    );
   }
 
   if (query.data.encrypted) {
@@ -72,7 +75,7 @@ function BoardTokens({ boardId, owner }: { boardId: string, owner: string }) {
     );
   }
 
-  if (!query.data || !query.data.tokens ||  query.data.tokens.length === 0) {
+  if (!query.data || !query.data.tokens || query.data.tokens.length === 0) {
     return (
       <div className="w-full h-56 bg-gray-50 flex flex-col justify-center text-center text-gray-500 space-y-4">
         <p className="text-xl block">{"This is empty :("}</p>
@@ -114,11 +117,18 @@ function BoardActions({
   toggleSettings: () => void;
 }) {
   const { user, loading } = useUser();
-  const { contract, isFollowing, getCalldata } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
+  const { contract, isFollowing, getCalldata } = useFollowModule(
+    import.meta.env.VITE_FOLLOW_MODULE,
+  );
   const query = useQuery({
     queryKey: ["board", boardId, "user", user?.uid, "following"],
     enabled: !!user,
-    queryFn: () => isFollowing(boardId, user?.uid as string, import.meta.env.VITE_MUSEBOARD_CONTRACT),
+    queryFn: () =>
+      isFollowing(
+        boardId,
+        user?.uid as string,
+        import.meta.env.VITE_BOARDS_CONTRACT,
+      ),
   });
   const { executeTransactionRequest } = useTransactionSender();
 
@@ -127,10 +137,10 @@ function BoardActions({
       const calldata = getCalldata(boardId);
 
       const txn = executeTransactionRequest({
-        to: import.meta.env.VITE_MUSEBOARD_CONTRACT,
+        to: import.meta.env.VITE_BOARDS_CONTRACT,
         data: calldata,
       });
-  
+
       await txn;
     } catch (err: any) {
       console.log(contract.interface.parseError(err.data));
@@ -138,10 +148,10 @@ function BoardActions({
   }
 
   async function unfollowMuseboard() {
-    const calldata = getCalldata(boardId, 'unfollow');
+    const calldata = getCalldata(boardId, "unfollow");
 
     const txn = executeTransactionRequest({
-      to: import.meta.env.VITE_MUSEBOARD_CONTRACT,
+      to: import.meta.env.VITE_BOARDS_CONTRACT,
       data: calldata,
     });
 
@@ -226,21 +236,33 @@ function BoardActions({
 }
 
 function Followers({ identifier }: { identifier: string }) {
-  const { getFollowersCount } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
+  const { getFollowersCount } = useFollowModule(
+    import.meta.env.VITE_FOLLOW_MODULE,
+  );
   const followersModal = useModal("list-followers");
   const query = useQuery({
     queryKey: ["board:metadata:followers-count", identifier],
-    queryFn: () => getFollowersCount(identifier, import.meta.env.VITE_MUSEBOARD_CONTRACT),
+    queryFn: () =>
+      getFollowersCount(identifier, import.meta.env.VITE_BOARDS_CONTRACT),
   });
 
   if (query.isLoading) {
     return <p>...</p>;
   }
 
-  return <a className="cursor-pointer" onClick={() => followersModal.show({
-    identifier,
-    target: import.meta.env.VITE_MUSEBOARD_CONTRACT
-  })}>{query.data} followers</a>;
+  return (
+    <a
+      className="cursor-pointer"
+      onClick={() =>
+        followersModal.show({
+          identifier,
+          target: import.meta.env.VITE_BOARDS_CONTRACT,
+        })
+      }
+    >
+      {query.data} followers
+    </a>
+  );
 }
 
 export default function BoardPage() {
@@ -265,7 +287,7 @@ export default function BoardPage() {
         seed: `${query.data.owner}:${query.data.id}`,
         scale: 40,
         bgcolor: "#f1f1f1",
-      }).toDataURL()
+      }).toDataURL(),
     );
   }, [query.data]);
 
@@ -343,7 +365,7 @@ export default function BoardPage() {
                       >
                         {query.data.owner.substring(0, 5)}...
                         {query.data.owner.substring(
-                          query.data.owner.length - 5
+                          query.data.owner.length - 5,
                         )}
                       </Link>
                     </div>
@@ -362,8 +384,15 @@ export default function BoardPage() {
             </div>
           </div>
           <div className="max-w-7xl mx-auto px-8">
-            { (user || !query.data.privateBoard) && <BoardTokens boardId={boardId as string} owner={query.data.owner} /> }
-            { !user && query.data.privateBoard && <p>This is a private board.. connect wallet to check access</p>}
+            {(user || !query.data.privateBoard) && (
+              <BoardTokens
+                boardId={boardId as string}
+                owner={query.data.owner}
+              />
+            )}
+            {!user && query.data.privateBoard && (
+              <p>This is a private board.. connect wallet to check access</p>
+            )}
           </div>
         </main>
       </div>

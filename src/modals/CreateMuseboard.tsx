@@ -10,7 +10,7 @@ import { TToken, useBoardsQuery } from "../queries/boards";
 
 import safeGet from "lodash/get";
 
-import { abi } from "boardly-contracts/artifacts/contracts/Museboard.sol/Museboard.json";
+import { abi } from "boardly-contracts/artifacts/contracts/Boards.sol/Boards.json";
 import LSP6KeyManager from "@erc725/erc725.js/schemas/LSP6KeyManager.json";
 
 import useUser from "../hooks/useUser";
@@ -216,7 +216,7 @@ function BoardForm({
 const MuseboardModal = NiceModal.create(() => {
   const { user } = useUser();
   const modal = useModal();
-  const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
+  const contract = useContract(import.meta.env.VITE_BOARDS_CONTRACT, abi);
   const { addNew } = useBoardsQuery(user?.uid as string);
   const { getTokens, updateMetadata } = useMuseboard();
   const { sendTransaction } = useTransactionSender();

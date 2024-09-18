@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { LockClosedIcon, PlusCircleIcon, UsersIcon } from "@heroicons/react/24/outline";
+import {
+  LockClosedIcon,
+  PlusCircleIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -26,19 +30,19 @@ function Museboard({ board }: { board: TBoard }) {
           bgcolor: "#f1f1f1",
           // spotcolor: 'rgba(0,0,0,0.6)',
           // color: 'rgba(0,0,0, 0.4)'
-        }).toDataURL()
+        }).toDataURL(),
   );
 
   function BoardIcon({ board }: { board: TBoard }) {
     if (board.followersOnly) {
-      return <UsersIcon className="inline h-4 mr-2" />
+      return <UsersIcon className="inline h-4 mr-2" />;
     }
 
     if (board.privateBoard) {
-      return <LockClosedIcon className="inline h-4 mr-2"/>
+      return <LockClosedIcon className="inline h-4 mr-2" />;
     }
 
-    return <></>
+    return <></>;
   }
 
   return (
@@ -47,7 +51,9 @@ function Museboard({ board }: { board: TBoard }) {
         src={image}
         className="rounded-3xl bg-gradient-to-tr to-purple-500 from-cyan-500 hover:p-1 transition-all duration-500 hover:shadow-xl w-full aspect-square object-cover"
       />
-      <p className="text-center font-semibold mt-4"><BoardIcon board={board}/> {board.name}</p>
+      <p className="text-center font-semibold mt-4">
+        <BoardIcon board={board} /> {board.name}
+      </p>
     </Link>
   );
 }
@@ -96,7 +102,7 @@ function MuseboardContainer({ boardId }: { boardId: string }) {
         seed: `${query.data.owner}:${query.data.id}`,
         scale: 40,
         bgcolor: "#f1f1f1",
-      }).toDataURL()
+      }).toDataURL(),
     );
   }, [query.data]);
 
@@ -109,12 +115,12 @@ function MuseboardContainer({ boardId }: { boardId: string }) {
 
 function FollowingMuseboardList({ address }: { address: string }) {
   const { getFollowingList } = useFollowModule(
-    import.meta.env.VITE_FOLLOW_MODULE
+    import.meta.env.VITE_FOLLOW_MODULE,
   );
   const query = useQuery({
     queryKey: ["profile", address, "following-boards"],
     queryFn: () =>
-      getFollowingList(address, import.meta.env.VITE_MUSEBOARD_CONTRACT),
+      getFollowingList(address, import.meta.env.VITE_BOARDS_CONTRACT),
   });
 
   if (query.isLoading) {
@@ -137,7 +143,9 @@ export default function Museboards() {
   const { address } = useParams();
 
   function openModal() {
-    if (userLoading) { return; }
+    if (userLoading) {
+      return;
+    }
 
     newMuseboardModal.show({ authUser: user?.uid });
   }

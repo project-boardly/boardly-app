@@ -6,7 +6,7 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { TBoard, TToken, matchTokens, useBoardsQuery } from "../queries/boards";
 
 import { upload } from "../utils/ipfs";
-import { abi } from "boardly-contracts/artifacts/contracts/Museboard.sol/Museboard.json";
+import { abi } from "boardly-contracts/artifacts/contracts/Boards.sol/Boards.json";
 import { useContract } from "../hooks/useContract";
 import { useTransactionSender } from "../hooks/transactions";
 
@@ -212,7 +212,7 @@ const AddToMuseboard = NiceModal.create(() => {
     queryKey: ["onchain:boards", user?.uid],
     queryFn: () => getBoards(user?.uid as string),
   });
-  const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
+  const contract = useContract(import.meta.env.VITE_BOARDS_CONTRACT, abi);
   const { sendTransaction } = useTransactionSender();
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);

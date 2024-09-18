@@ -10,32 +10,39 @@ export default function NFTCard({
   metadataUrl,
   name,
   addToMuseboard,
-  standard
+  standard,
 }: {
-  chain: string,
+  chain: string;
   collection: string;
   tokenId: number;
   name: string;
   metadataUrl?: string;
   standard?: string;
-  addToMuseboard?: () => void
+  addToMuseboard?: () => void;
 }) {
-  const { fetchMetadataByUri, fetchMetadata } = useCollection(chain, collection, standard);
+  const { fetchMetadataByUri, fetchMetadata } = useCollection(
+    chain,
+    collection,
+    standard,
+  );
   const query = useQuery({
     queryKey: ["chain", chain, "collection", collection, "token", tokenId],
     cacheTime: 60 * 60 * 1000,
     staleTime: 60 * 60 * 1000,
-    queryFn: () => metadataUrl ? fetchMetadataByUri(metadataUrl) : fetchMetadata(tokenId.toString())
+    queryFn: () =>
+      metadataUrl
+        ? fetchMetadataByUri(metadataUrl)
+        : fetchMetadata(tokenId.toString()),
   });
 
-  function parseImageUrl (image: string) {
+  function parseImageUrl(image: string) {
     const url = image
       .replace("ipfs://", "https://ipfs.io/ipfs/")
-      .replace('ipfs/ipfs/', 'ipfs/')
-      .replace('https://ipfs.pixura.io/', 'https://ipfs.io/');
+      .replace("ipfs/ipfs/", "ipfs/")
+      .replace("https://ipfs.pixura.io/", "https://ipfs.io/");
 
-    if (url.startsWith('https://')) {
-      return `${import.meta.env.VITE_API_HOST}/300x,q90/${url}`
+    if (url.startsWith("https://")) {
+      return `http://localhost:8080/_/w:600/plain/${url}`;
     }
 
     return url;
@@ -45,27 +52,44 @@ export default function NFTCard({
     const height = e.target.height;
     const width = e.target.width;
 
-    if (width/height > 2) {
-      return queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
-        imageMeta: { height: 400, width: 400 }
-      }, query.data))
+    if (width / height > 2) {
+      return queryClient.setQueryData(
+        ["chain", chain, "collection", collection, "token", tokenId],
+        Object.assign(
+          {
+            imageMeta: { height: 400, width: 400 },
+          },
+          query.data,
+        ),
+      );
     }
 
-    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
-      imageMeta: { height, width }
-    }, query.data))
+    queryClient.setQueryData(
+      ["chain", chain, "collection", collection, "token", tokenId],
+      Object.assign(
+        {
+          imageMeta: { height, width },
+        },
+        query.data,
+      ),
+    );
   }
 
-  function setSkip () {
-    queryClient.setQueryData(["chain", chain, "collection", collection, "token", tokenId], Object.assign({
-      skip: true
-    }, query.data))
+  function setSkip() {
+    queryClient.setQueryData(
+      ["chain", chain, "collection", collection, "token", tokenId],
+      Object.assign(
+        {
+          skip: true,
+        },
+        query.data,
+      ),
+    );
   }
 
   if (query.isLoading) {
     return (
-      <div className="rounded-3xl aspect-square bg-slate-100 text-center align-middle animate-pulse">
-      </div>
+      <div className="rounded-3xl aspect-square bg-slate-100 text-center align-middle animate-pulse"></div>
     );
   }
 
@@ -76,7 +100,7 @@ export default function NFTCard({
   }
 
   if (query.data.skip) {
-    console.log('skipped', collection, tokenId);
+    console.log("skipped", collection, tokenId);
 
     return <></>;
   }
@@ -102,7 +126,9 @@ export default function NFTCard({
   return (
     <div
       className={`group grow-0 overflow-hidden rounded-3xl flex flex-col border border-gray-300 hover:shadow-2xl transition-all transition-duration-700 hover:p-4`}
-      style={{ aspectRatio: `${query.data.imageMeta.width}/${query.data.imageMeta.height}` }}
+      style={{
+        aspectRatio: `${query.data.imageMeta.width}/${query.data.imageMeta.height}`,
+      }}
     >
       <Link
         id={`explore:${collection}:${tokenId}`}
@@ -123,12 +149,14 @@ export default function NFTCard({
             <span className="text-gray-600 font-normal mr-2 mb-2 ">From</span>
             {name}
           </p>
-          { addToMuseboard && <button
-            onClick={() => addToMuseboard()}
-            className="bg-black text-white font-bold py-4 shadow-lg w-full rounded-2xl"
-          >
-            Add to board
-          </button> }
+          {addToMuseboard && (
+            <button
+              onClick={() => addToMuseboard()}
+              className="bg-black text-white font-bold py-4 shadow-lg w-full rounded-2xl"
+            >
+              Add to board
+            </button>
+          )}
         </div>
       </div>
     </div>

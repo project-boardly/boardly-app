@@ -228,7 +228,7 @@ function createLitSiweMessage(address: string, upAddress: string) {
   const origin = window.location.origin;
   const encodedUpAddress = uint8arrayToString(
     uint8arrayFromString(upAddress, "utf8"),
-    "base64url"
+    "base64url",
   );
 
   const message = new SiweMessage({
@@ -239,7 +239,7 @@ function createLitSiweMessage(address: string, upAddress: string) {
     nonce: "lWnXtPjsqVSuDOkmS",
     version: "1",
     issuedAt: new Date(Date.parse("2023-11-26T10:13:51.151Z")).toISOString(),
-    chainId: 4201,
+    chainId: 42,
     resources: [`litParam:upAddress:${encodedUpAddress}`],
   });
 
@@ -260,7 +260,7 @@ export async function getEncryptionWallet() {
     localStorage.setItem("encryption-nonce", nonce);
     localStorage.setItem(
       "encryption-nonce-creator",
-      verifyMessage(message, sign)
+      verifyMessage(message, sign),
     );
   }
 
@@ -289,7 +289,7 @@ async function encrypt(message: string, conditions: any[], upAddress: string) {
       chain: "luksoTestnet",
       dataToEncrypt: message,
     },
-    client
+    client,
   );
 
   return { ciphertext, hash: dataToEncryptHash };
@@ -299,7 +299,7 @@ async function decrypt(
   ciphertext: string,
   dataHash: string,
   conditions: any[],
-  upAddress: string
+  upAddress: string,
 ) {
   await client.connect();
   const authSig = await getAuthSig(upAddress);
@@ -312,7 +312,7 @@ async function decrypt(
       authSig,
       chain: "luksoTestnet",
     },
-    client
+    client,
   );
 
   return decryptedString;

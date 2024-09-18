@@ -1,5 +1,5 @@
 import { useContract } from "./useContract";
-import { abi } from "boardly-contracts/artifacts/contracts/Museboard.sol/Museboard.json";
+import { abi } from "boardly-contracts/artifacts/contracts/Boards.sol/Boards.json";
 import { decodeKeyValue } from "@erc725/erc725.js/build/main/src/lib/utils";
 import useLitNetwork from "./useLitNetwork";
 import {
@@ -15,9 +15,14 @@ function ipfsUrl(url: string) {
   return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
 }
 
+const TOKENS_DATA_KEY =
+  "0x680989b8ba4329dbb34fe099c4644fce6e521152facc82d70e978bdc51facd5c";
+const BOARD_METADATA_KEY =
+  "0x9afb95cacc9f95858ec44aa8c3b685511002e30ae54415823f406128b85b238e";
+
 export default function useMuseboard() {
   const user = useContext(UserContext);
-  const contract = useContract(import.meta.env.VITE_MUSEBOARD_CONTRACT, abi);
+  const contract = useContract(import.meta.env.VITE_BOARDS_CONTRACT, abi);
   const { sendTransaction } = useTransactionSender();
   const { encrypt, decrypt } = useLitNetwork();
 
@@ -32,7 +37,7 @@ export default function useMuseboard() {
     const owner = contract.tokenOwnerOf(boardId);
 
     return contract
-      .getMetadata("metadata", boardId)
+      .getDataForTokenId(boardId, BOARD_METADATA_KEY)
       .then((metadata) => {
         const { url } = decodeKeyValue(
           "JSONURL",
@@ -50,7 +55,7 @@ export default function useMuseboard() {
 
   async function getTokens(boardId: string) {
     return contract
-      .getMetadata("tokens", boardId)
+      .getMetadata(boardId, TOKENS_DATA_KEY)
       .then((metadata) => {
         const data = decodeKeyValue("JSONURL", "bytes", metadata, "metadata");
 

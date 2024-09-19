@@ -4,7 +4,8 @@ import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { Loader } from "./AddToMuseboard";
 import { useQuery } from "@tanstack/react-query";
 import ProfilesList from "../common/ProfilesList";
-import useFollowModule from "../hooks/useFollowModule";
+// import useConnectModule from "../hooks/useConnectModule";
+import useFollowSystem from "../hooks/useFollowSystem";
 
 type FollowerListModalArgs = {
   identifier: string;
@@ -13,11 +14,11 @@ type FollowerListModalArgs = {
 
 const FollowersListModal = NiceModal.create(() => {
   const modal = useModal();
-  const { identifier, target } = modal.args as FollowerListModalArgs;
-  const { getFollowersList } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
+  const { target } = modal.args as FollowerListModalArgs;
+  const { getFollowersList } = useFollowSystem(import.meta.env.VITE_FOLLOW_SYSTEM_ADDR);
   const query = useQuery({
-    queryKey: ["followers-profiles", identifier],
-    queryFn: () => getFollowersList(identifier, target),
+    queryKey: ["followers-profiles", target],
+    queryFn: () => getFollowersList(target),
   });
 
   return (

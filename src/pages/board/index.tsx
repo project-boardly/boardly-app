@@ -16,13 +16,13 @@ import { Loader } from "../../modals/AddToMuseboard";
 
 import useMuseboard from "../../hooks/useMuseboard";
 import useUser from "../../hooks/useUser";
-import useFollowModule from "../../hooks/useFollowModule";
+import useConnectModule from "../../hooks/useConnectModule";
 import { useTransactionSender } from "../../hooks/transactions";
 import UserContext from "../../contexts/UserContext";
 import { ProfileCard } from "../profile";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
 }
 
 function BoardTokens({ boardId, owner }: { boardId: string; owner: string }) {
@@ -117,7 +117,7 @@ function BoardActions({
   toggleSettings: () => void;
 }) {
   const { user, loading } = useUser();
-  const { contract, isFollowing, getCalldata } = useFollowModule(
+  const { contract, isFollowing, getCalldata } = useConnectModule(
     import.meta.env.VITE_FOLLOW_MODULE,
   );
   const query = useQuery({
@@ -236,7 +236,7 @@ function BoardActions({
 }
 
 function Followers({ identifier }: { identifier: string }) {
-  const { getFollowersCount } = useFollowModule(
+  const { getFollowersCount } = useConnectModule(
     import.meta.env.VITE_FOLLOW_MODULE,
   );
   const followersModal = useModal("list-followers");

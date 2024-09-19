@@ -4,7 +4,7 @@ import ProfileMetadataSchema from "@erc725/erc725.js/schemas/LSP3ProfileMetadata
 import ReceivedAssetsSchema from "@erc725/erc725.js/schemas/LSP5ReceivedAssets.json";
 import IssuedAssetsSchema from '@erc725/erc725.js/schemas/LSP12IssuedAssets.json';
 
-import UniversalProfileContract from "@lukso/lsp-smart-contracts/artifacts/UniversalProfile.json";
+import UniversalProfileContract from "@lukso/universalprofile-contracts/artifacts/UniversalProfile.json";
 
 import { INTERFACE_IDS } from "@lukso/lsp-smart-contracts/constants";
 
@@ -24,7 +24,7 @@ export async function fetchProfileData(profile: any) {
   } catch (error) {
     console.log(error);
 
-    return console.log("This is not an ERC725 Contract");
+    return;
   }
 }
 
@@ -50,7 +50,9 @@ export default function useUniversalProfile(address: string) {
 
   return {
     contract,
-    isUniversalProfile: () => contract.supportsInterface(INTERFACE_IDS.LSP0ERC725Account),
+    isUniversalProfile: () => {
+      return contract.supportsInterface(INTERFACE_IDS.LSP0ERC725Account)
+    },
     getProfileData: () => fetchProfileData(erc725).then((data) => data.value.LSP3Profile),
     fetch: function (type: string) {
       return erc725?.fetchData(type);

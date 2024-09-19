@@ -12,7 +12,7 @@ import { upload } from "../utils/ipfs";
 import { useTransactionSender } from "./transactions";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
 }
 
 const TOKENS_DATA_KEY =

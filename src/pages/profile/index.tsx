@@ -12,22 +12,17 @@ import { Address } from "../../common/components";
 
 import { useProfileQuery } from "../../queries/profiles";
 
-import useFollowModule from "../../hooks/useFollowModule";
 import useUser from "../../hooks/useUser";
-import useUniversalProfile from "../../hooks/useUniversalProfile";
+import useFollowSystem from "../../hooks/useFollowSystem";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
 }
 
-const _FOLLOWING_ARRAY_KEY =
-  "0xd62c218b4cee2c6cd2453415e67c5ffaa3220349ed84a836e45f1fc38c24f476";
-
 function FollowInfo({ address }: { address: string }) {
-  const { getFollowersCount } = useFollowModule(
-    import.meta.env.VITE_FOLLOW_MODULE
+  const { getFollowersCount, getFollowingCount } = useFollowSystem(
+    import.meta.env.VITE_FOLLOW_SYSTEM_ADDR
   );
-  const { contract } = useUniversalProfile(address);
   const [stats, setStats] = useState({
     following: 0,
     followers: 0,
@@ -36,15 +31,13 @@ function FollowInfo({ address }: { address: string }) {
   const followersModal = useModal("list-followers");
 
   useEffect(() => {
-    const identifier = zeroPadValue(address, 32);
-
     Promise.all([
-      getFollowersCount(identifier, import.meta.env.VITE_UP_FOLLOW_SYSTEM),
-      contract.getData(_FOLLOWING_ARRAY_KEY),
+      getFollowersCount(address),
+      getFollowingCount(address)
     ]).then(([followers, following]) => {
       setStats({
         followers,
-        following: following === "0x" ? 0 : Number(BigInt(following)),
+        following
       });
     });
   }, []);
@@ -62,8 +55,7 @@ function FollowInfo({ address }: { address: string }) {
         className="mx-4 cursor-pointer"
         onClick={() =>
           followersModal.show({
-            identifier: zeroPadValue(address, 32),
-            target: import.meta.env.VITE_UP_FOLLOW_SYSTEM,
+            target: address,
           })
         }
       >
@@ -143,9 +135,9 @@ export function ProfileCard({
           <div className="py-4">
             <p className="">{query.data.description}</p>
           </div>
-          {/* {!authUserLoading && user && user.uid !== address && (
+          {!authUserLoading && user && user.uid !== address && (
             <FollowAction address={getAddress(user.uid)} target={address} />
-          )} */}
+          )}
         </div>
       </div>
     </div>
@@ -179,7 +171,7 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-4">
           <ProfileCard address={address as string} />
           <div className="space-x-3">
-            <ActiveNavLink to={`/profile/${address}`}>museboards</ActiveNavLink>
+            <ActiveNavLink to={`/profile/${address}`}>boards</ActiveNavLink>
             <ActiveNavLink to={`/profile/${address}/assets`}>
               assets
             </ActiveNavLink>

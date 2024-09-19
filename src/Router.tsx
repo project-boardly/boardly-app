@@ -13,10 +13,10 @@ import Explore from "./pages/explore/Explore";
 import Token from "./pages/token";
 import ProfilePage from "./pages/profile";
 import BoardPage from "./pages/board";
-import useMuseboard from "./hooks/useMuseboard";
+import useBoards from "./hooks/useMuseboard";
 import { useEffect } from "react";
 import useUser from "./hooks/useUser";
-import Museboards from "./pages/profile/boards";
+import Boards from "./pages/profile/boards";
 import Assets from "./pages/profile/assets";
 import Universe from "./pages/profile/universe";
 
@@ -27,7 +27,7 @@ const router = () => createBrowserRouter(
       <Route path='/collection/:chain/:collection/token/:tokenId' element={<Token />} />
       <Route path='/collection/:chain/:address' element={<Collection />} />
       <Route path='/profile/:address' element={<ProfilePage />}>
-        <Route index={true} path='/profile/:address' element={<Museboards />}/>
+        <Route index={true} path='/profile/:address' element={<Boards />}/>
         <Route path='/profile/:address/assets' element={<Assets />}/>
         <Route path='/profile/:address/universe' element={<Universe />}/>
       </Route>
@@ -39,19 +39,19 @@ const router = () => createBrowserRouter(
 export default function Router () {
   const { loading, user } = useUser();
   const queryClient = useQueryClient();
-  // const { getBoards } = useMuseboard();
+  const { getBoards } = useBoards();
 
-  // useEffect(() => {
-  //   if (loading) { return; }
+  useEffect(() => {
+    if (loading) { return; }
 
-  //   if (!user) { return; }
+    if (!user) { return; }
 
-  //   queryClient.prefetchQuery({
-  //     queryKey: ['onchain:boards', user.uid],
-  //     queryFn: () => getBoards(user.uid as string),
-  //     staleTime: 1 * 24 * 60 * 60
-  //   });
-  // }, [loading, user]);
+    queryClient.prefetchQuery({
+      queryKey: ['onchain:boards', user.uid],
+      queryFn: () => getBoards(user.uid as string),
+      staleTime: 1 * 24 * 60 * 60
+    });
+  }, [loading, user]);
 
   return <RouterProvider router={router()} />
 }

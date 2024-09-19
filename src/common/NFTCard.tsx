@@ -42,7 +42,7 @@ export default function NFTCard({
       .replace("https://ipfs.pixura.io/", "https://ipfs.io/");
 
     if (url.startsWith("https://")) {
-      return `http://localhost:8080/_/w:600/plain/${url}`;
+      return `http://localhost:8080/300x,q90/${url}`;
     }
 
     return url;

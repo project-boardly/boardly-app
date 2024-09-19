@@ -11,14 +11,14 @@ import { useContract } from "../hooks/useContract";
 import { useTransactionSender } from "../hooks/transactions";
 
 import { useQuery } from "@tanstack/react-query";
-import useMuseboard from "../hooks/useMuseboard";
+import useBoards from "../hooks/useMuseboard";
 import { create } from "blockies-ts";
 import { ConnectWallet } from "../common/components";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
 import UserContext from "../contexts/UserContext";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
 }
 
 export function Loader() {
@@ -56,7 +56,7 @@ function InlineMuseboard({
   addToBoard: (boardId: string) => Promise<any>;
   removeFromBoard: (boardId: string) => Promise<any>;
 }) {
-  const { getTokens } = useMuseboard();
+  const { getTokens } = useBoards();
   const query = useQuery({
     queryKey: ["board:tokens", board.id],
     queryFn: () => getTokens(board.id as string),
@@ -207,7 +207,7 @@ const AddToMuseboard = NiceModal.create(() => {
   const user = useContext(UserContext);
   const { query, addNew, addTokenToBoard, removeTokenFromBoard } =
     useBoardsQuery(user?.uid as string);
-  const { getBoards, updateMetadata } = useMuseboard();
+  const { getBoards, updateMetadata } = useBoards();
   const onchainBoardsQuery = useQuery({
     queryKey: ["onchain:boards", user?.uid],
     queryFn: () => getBoards(user?.uid as string),

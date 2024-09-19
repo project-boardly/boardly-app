@@ -8,7 +8,7 @@ import LSP4DigitalAsset from "@erc725/erc725.js/schemas/LSP4DigitalAsset.json";
 import { ERC725JSONSchema } from "@erc725/erc725.js";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
 }
 
 export const providers: any = {

@@ -4,7 +4,7 @@ import safeGet from "lodash/get";
 import { Address } from "../common/components";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
 }
 
 function InlineProfile({ address }: { address: string }) {

@@ -1,8 +1,8 @@
-import { abi } from "boardly-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json";
+import { abi } from "../common/LSP26FollowerSystem.json";
 import { useContract } from "./useContract";
 import { getAddress } from "ethers";
 
-export default function useFollowModule(address: string) {
+export default function useConnectModule(address: string) {
   const contract = useContract(address, abi);
 
   function getFollowersCount(identifier: string, target: string) {

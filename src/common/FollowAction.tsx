@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Contract, getAddress, zeroPadValue } from "ethers";
 import { useTransactionSender } from "../hooks/transactions";
 
-import FollowModule from "boardly-contracts/artifacts/contracts/FollowModule.sol/FollowModule.json";
+import FollowModule from "./LSP26FollowerSystem.json";
 
 import KeyManagerSchema from "@erc725/erc725.js/schemas/LSP6KeyManager.json";
 import LSP17ExtensionSchema from "@erc725/erc725.js/schemas/LSP17ContractExtension.json";
@@ -11,11 +11,12 @@ import { useErc725 } from "../hooks/useErc725";
 import type { ERC725JSONSchema } from "@erc725/erc725.js";
 import useUniversalProfile from "../hooks/useUniversalProfile";
 import { encodeValueType } from "@erc725/erc725.js/build/main/src/lib/encoder";
-import useFollowModule from "../hooks/useFollowModule";
+import useConnectModule from "../hooks/useConnectModule";
 import { useQuery } from "@tanstack/react-query";
 import { getEncryptionWallet } from "../contexts/LitNetworkContext";
+import useFollowSystem from "../hooks/useFollowSystem";
 
-const _FOLLOW_SYSTEM_ADDR = getAddress(import.meta.env.VITE_UP_FOLLOW_SYSTEM);
+const _CONNECT_SYSTEM_ADDR = getAddress(import.meta.env.VITE_UP_CONNECT_SYSTEM);
 
 type ReadyToFollow = {
   canFollow: boolean;
@@ -42,220 +43,30 @@ export default function FollowAction({
   address: string;
   target: string;
 }) {
-  const targetAddr = zeroPadValue(target, 32);
   const { contract } = useUniversalProfile(address);
-  const { isFollowing } = useFollowModule(import.meta.env.VITE_FOLLOW_MODULE);
-  const erc725 = useErc725(
-    address,
-    KeyManagerSchema.concat(LSP17ExtensionSchema) as ERC725JSONSchema[],
-  );
-  const [loading, setLoading] = useState(true);
+  const { isFollowing, contract: followSystemContract } = useFollowSystem(import.meta.env.VITE_FOLLOW_SYSTEM_ADDR);
   const { sendTransaction } = useTransactionSender();
-  const [readyToFollow, setRTF] = useState<ReadyToFollow>();
   const query = useQuery({
     queryKey: ["is-following", target],
-    queryFn: () => isFollowing(targetAddr, address, _FOLLOW_SYSTEM_ADDR),
+    queryFn: () => isFollowing(address, target),
+    refetchOnWindowFocus: false,
+    refetchOnMount: false
   });
 
-  useEffect(() => {
-    isReadyToFollow().then((rtfStatus: ReadyToFollow) => {
-      setRTF(rtfStatus);
-      setLoading(false);
-    });
-  }, []);
-
-  async function isReadyToFollow() {
-    const [allowedKeys, permissions] = await erc725.fetchData([
-      {
-        keyName: "AddressPermissions:AllowedERC725YDataKeys:<address>",
-        dynamicKeyParts: _FOLLOW_SYSTEM_ADDR,
-      },
-      {
-        keyName: "AddressPermissions:Permissions:<address>",
-        dynamicKeyParts: _FOLLOW_SYSTEM_ADDR,
-      },
-    ]);
-
-    const [startFollowingExtension, stopFollowingExtension] =
-      await contract.getDataBatch([
-        _START_FOLLOWING_SELECTOR,
-        _STOP_FOLLOWING_SELECTOR,
-      ]);
-
-    const status: ReadyToFollow = {
-      canFollow: false,
-      permissions: false,
-      startFollowingExtension: false,
-      stopFollowingExtension: false,
-      allowedDataKeys: false,
-    };
-
-    if (permissions.value) {
-      status.permissions =
-        erc725.checkPermissions(
-          ["SETDATA", "REENTRANCY"],
-          permissions.value as string,
-        ) ||
-        erc725.checkPermissions(
-          ["SUPER_SETDATA", "REENTRANCY"],
-          permissions.value as string,
-        );
-    }
-
-    status.startFollowingExtension =
-      startFollowingExtension !== "0x" &&
-      getAddress(startFollowingExtension) === _FOLLOW_SYSTEM_ADDR;
-
-    status.stopFollowingExtension =
-      stopFollowingExtension !== "0x" &&
-      getAddress(stopFollowingExtension) === _FOLLOW_SYSTEM_ADDR;
-
-    if (allowedKeys.value) {
-      status.allowedDataKeys = _REQUIRED_DATA_KEYS.reduce((acc, key) => {
-        if (!acc) {
-          return acc;
-        }
-
-        acc = acc && (allowedKeys.value as string[]).indexOf(key) >= 0;
-
-        return acc;
-      }, true);
-    }
-
-    status.canFollow =
-      status.permissions &&
-      status.startFollowingExtension &&
-      status.stopFollowingExtension &&
-      status.allowedDataKeys;
-
-    return status;
-  }
-
-  async function setupFollowModule() {
-    const keys: string[] = [],
-      values: string[] = [];
-
-    if (!readyToFollow) {
-      console.log("Loading");
-
-      return;
-    }
-
-    const controller = localStorage.getItem("up-controller");
-
-    if (controller) {
-      const controllerPerms = await erc725.fetchData({
-        keyName: "AddressPermissions:Permissions:<address>",
-        dynamicKeyParts: controller as string,
-      });
-
-      const perms = erc725.decodePermissions(controllerPerms.value as string);
-
-      if (!perms.ADDEXTENSIONS) {
-        keys.push(controllerPerms.key);
-        values.push(
-          erc725.encodePermissions(
-            Object.assign(perms, { ADDEXTENSIONS: true }),
-          ),
-        );
-      }
-    }
-
-    const encWallet = await getEncryptionWallet();
-
-    if (encWallet.address) {
-      const controllerPerms = await erc725.fetchData({
-        keyName: "AddressPermissions:Permissions:<address>",
-        dynamicKeyParts: encWallet.address,
-      });
-
-      if (
-        !erc725.checkPermissions("DECRYPT", controllerPerms.value as string)
-      ) {
-        keys.push(controllerPerms.key);
-        values.push(erc725.encodePermissions({ DECRYPT: true }));
-      }
-    }
-
-    if (!readyToFollow.startFollowingExtension) {
-      keys.push(_START_FOLLOWING_SELECTOR);
-      values.push(_FOLLOW_SYSTEM_ADDR);
-    }
-
-    if (!readyToFollow.stopFollowingExtension) {
-      keys.push(_STOP_FOLLOWING_SELECTOR);
-      values.push(_FOLLOW_SYSTEM_ADDR);
-    }
-
-    keys.push(
-      erc725.encodeKeyName(
-        "AddressPermissions:Permissions:<address>",
-        _FOLLOW_SYSTEM_ADDR,
-      ),
-    );
-    values.push(erc725.encodePermissions({ SETDATA: true, REENTRANCY: true }));
-
-    keys.push(
-      erc725.encodeKeyName(
-        "AddressPermissions:AllowedERC725YDataKeys:<address>",
-        _FOLLOW_SYSTEM_ADDR,
-      ),
-    );
-    values.push(
-      encodeValueType("bytes[CompactBytesArray]", _REQUIRED_DATA_KEYS),
-    );
-
-    sendTransaction(contract, "setDataBatch", [keys, values]);
-  }
-
   async function followProfile() {
-    const targetAddr = zeroPadValue(target, 32);
-
-    const followModuleContract = new Contract(address, FollowModule.abi);
-
-    const data = followModuleContract.interface.encodeFunctionData(
-      "startFollowing",
-      [targetAddr],
-    );
-
-    sendTransaction(contract, "execute", [0, address, 0, data]).then(() =>
+    sendTransaction(followSystemContract, "follow", [target]).then(() =>
       query.refetch(),
     );
   }
 
   async function unfollowProfile() {
-    const targetAddr = zeroPadValue(target, 32);
-
-    const followModuleContract = new Contract(address, FollowModule.abi);
-
-    const data = followModuleContract.interface.encodeFunctionData(
-      "stopFollowing",
-      [targetAddr],
-    );
-
-    sendTransaction(contract, "execute", [0, address, 0, data]).then(() =>
+    sendTransaction(followSystemContract, "unfollow", [target]).then(() =>
       query.refetch(),
     );
   }
 
-  if (loading || query.isLoading) {
-    return <></>;
-  }
-
-  if (!readyToFollow?.canFollow) {
-    return (
-      <div className="p-2 rounded-xl text-center">
-        <button
-          onClick={() => setupFollowModule()}
-          className="w-full backdrop-blur-lg bg-white/30 font-bold py-2 rounded-xl"
-        >
-          Setup Follow Module
-        </button>
-        <small className="mt-2 text-gray-400">
-          Setup the follow module to start following people
-        </small>
-      </div>
-    );
+  if (query.isLoading) {
+    return <p className="text-center">Loading</p>;
   }
 
   if (query.data) {

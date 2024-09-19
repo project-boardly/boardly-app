@@ -6,6 +6,7 @@ import { useErc725 } from "../hooks/useErc725";
 import { useQuery } from "@tanstack/react-query";
 import type { ERC725JSONSchema } from "@erc725/erc725.js";
 import ProfilesList from "../common/ProfilesList";
+import useFollowSystem from "../hooks/useFollowSystem";
 
 const schema: ERC725JSONSchema[] = [
   {
@@ -24,11 +25,11 @@ type FollowingListModalArgs = {
 const FollowingListModal = NiceModal.create(() => {
   const modal = useModal();
   const { address } = modal.args as FollowingListModalArgs;
-  const erc725 = useErc725(address, schema);
+  const { getFollowingList } = useFollowSystem(import.meta.env.VITE_FOLLOW_SYSTEM_ADDR);
   const query = useQuery({
     queryKey: ["following-profiles", address],
     queryFn: () => {
-      return erc725.fetchData("FollowingProfiles[]").then((data) => data.value);
+      return getFollowingList(address);
     },
   });
 

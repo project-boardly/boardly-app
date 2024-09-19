@@ -12,12 +12,12 @@ import { create } from "blockies-ts";
 import { useModal } from "@ebay/nice-modal-react";
 import { TBoard, useBoardsQuery } from "../../queries/boards";
 
-import useMuseboard from "../../hooks/useMuseboard";
-import useFollowModule from "../../hooks/useFollowModule";
+import useBoards from "../../hooks/useMuseboard";
+// import useFollowModule from "../../hooks/useFollowModule";
 import useUser from "../../hooks/useUser";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "https://2eff.lukso.dev/ipfs/");
+  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
 }
 
 function Museboard({ board }: { board: TBoard }) {
@@ -60,7 +60,7 @@ function Museboard({ board }: { board: TBoard }) {
 
 function MuseboardList({ address }: { address: string }) {
   const { query } = useBoardsQuery(address);
-  const { getBoards } = useMuseboard();
+  const { getBoards } = useBoards();
   const onchainBoardsQuery = useQuery({
     queryKey: ["onchain:boards", address],
     queryFn: () => getBoards(address),
@@ -85,7 +85,7 @@ function MuseboardList({ address }: { address: string }) {
 }
 
 function MuseboardContainer({ boardId }: { boardId: string }) {
-  const { getMetadata } = useMuseboard();
+  const { getMetadata } = useBoards();
   const query = useQuery({
     queryKey: ["board:metadata", boardId],
     queryFn: () => getMetadata(boardId as string),
@@ -113,31 +113,31 @@ function MuseboardContainer({ boardId }: { boardId: string }) {
   return <Museboard board={Object.assign({ logo: image }, query.data)} />;
 }
 
-function FollowingMuseboardList({ address }: { address: string }) {
-  const { getFollowingList } = useFollowModule(
-    import.meta.env.VITE_FOLLOW_MODULE,
-  );
-  const query = useQuery({
-    queryKey: ["profile", address, "following-boards"],
-    queryFn: () =>
-      getFollowingList(address, import.meta.env.VITE_BOARDS_CONTRACT),
-  });
+// function FollowingMuseboardList({ address }: { address: string }) {
+//   const { getFollowingList } = useFollowModule(
+//     import.meta.env.VITE_FOLLOW_SYSTEM_ADDR,
+//   );
+//   const query = useQuery({
+//     queryKey: ["profile", address, "following-boards"],
+//     queryFn: () =>
+//       getFollowingList(address, import.meta.env.VITE_BOARDS_CONTRACT),
+//   });
 
-  if (query.isLoading) {
-    return <p>Loading</p>;
-  }
+//   if (query.isLoading) {
+//     return <p>Loading</p>;
+//   }
 
-  return (
-    <>
-      {query.data &&
-        query.data.map((boardId: string) => (
-          <MuseboardContainer key={boardId} boardId={boardId} />
-        ))}
-    </>
-  );
-}
+//   return (
+//     <>
+//       {query.data &&
+//         query.data.map((boardId: string) => (
+//           <MuseboardContainer key={boardId} boardId={boardId} />
+//         ))}
+//     </>
+//   );
+// }
 
-export default function Museboards() {
+export default function Boards() {
   const { user, loading: userLoading } = useUser();
   const newMuseboardModal = useModal("create-museboard");
   const { address } = useParams();
@@ -167,10 +167,10 @@ export default function Museboards() {
         )}
         <MuseboardList address={address as string} />
       </div>
-      <h4 className="text-gray-500 py-4">FOLLOWING</h4>
+      {/* <h4 className="text-gray-500 py-4">FOLLOWING</h4>
       <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-4">
         <FollowingMuseboardList address={address as string} />
-      </div>
+      </div> */}
     </section>
   );
 }

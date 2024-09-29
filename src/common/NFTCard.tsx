@@ -29,20 +29,33 @@ export default function NFTCard({
     queryKey: ["chain", chain, "collection", collection, "token", tokenId],
     cacheTime: 60 * 60 * 1000,
     staleTime: 60 * 60 * 1000,
-    queryFn: () =>
-      metadataUrl
+    queryFn: () => {
+      if (typeof metadataUrl !== "string") {
+        return metadataUrl;
+      }
+
+      return metadataUrl
         ? fetchMetadataByUri(metadataUrl)
-        : fetchMetadata(tokenId.toString()),
+        : fetchMetadata(tokenId.toString());
+    },
   });
 
   function parseImageUrl(image: string) {
+    console.log(image);
+
     const url = image
-      .replace("ipfs://", "https://ipfs.io/ipfs/")
+      .replace(
+        "ipfs://",
+        "https://boardly-ipfs-proxy.project-boardly.workers.dev/ipfs/",
+      )
       .replace("ipfs/ipfs/", "ipfs/")
-      .replace("https://ipfs.pixura.io/", "https://ipfs.io/");
+      .replace(
+        "https://ipfs.pixura.io/",
+        "https://boardly-ipfs-proxy.project-boardly.workers.dev/",
+      );
 
     if (url.startsWith("https://")) {
-      return `http://localhost:8080/300x,q90/${url}`;
+      return `http://localhost:8080/500x,q90/${url}`;
     }
 
     return url;

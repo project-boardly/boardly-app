@@ -22,6 +22,64 @@ type CollectionMeta = {
   interface: any;
 };
 
+async function fetchLuksoTokens(
+  address: string,
+  limit: number,
+  offset: number,
+) {
+  console.log("fetching lukso tokens", address, limit, offset);
+
+  const query = `
+      query MyQuery {
+        Asset(
+          limit: 1
+          offset: 0
+          where: { id: { _eq: "${address}" } }
+        ) {
+          id
+          blockNumber
+          data
+          isCollection
+          isLSP7
+          isUnknown
+          lsp4TokenName
+          lsp4TokenSymbol
+          owner {
+            id
+          }
+          tokens(limit: ${limit}, offset: ${offset}, order_by: { tokenId: asc }) {
+            tokenId,
+            name,
+            images {
+              url
+            }
+          }
+        }
+      }
+    `;
+
+  const res = await fetch("http://localhost:3000/graphql-proxy", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ query: query }),
+  }).then((r) => r.json());
+
+  const tokens = res.data.Asset[0].tokens;
+
+  return tokens.map((t: any) => ({
+    address: address,
+    chain: "lukso",
+    id: t.tokenId,
+    metadata: {
+      name: t.name,
+      image: t.images[0].url,
+    },
+  }));
+}
+
 export const fetchTokens = async (
   meta: CollectionMeta,
   startAt: number,
@@ -29,13 +87,28 @@ export const fetchTokens = async (
   callback: any,
   onToken: (token: any) => void,
 ) => {
+  if (meta.chain === "lukso") {
+    const tokens = await fetchLuksoTokens(meta.address, pageSize, startAt);
+
+    for (const token of tokens) {
+      onToken({
+        id: token.id,
+        address: meta.address,
+        metadata: token.metadata,
+        collection: "",
+        chain: meta.chain,
+      });
+    }
+
+    callback({ tokens: tokens, cursor: tokens.length });
+    return;
+  }
+
   const contract = new Contract(
     meta.address,
     meta.standard === "ERC721" ? ERC721 : ERC1155,
     providers[meta.chain],
   );
-
-  meta.chain === "lukso" && console.log(meta);
 
   let _count = 0,
     tokenId = startAt;

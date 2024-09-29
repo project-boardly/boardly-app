@@ -7,20 +7,35 @@ import { Contract, JsonRpcProvider } from "ethers";
 import { ERC721, ERC1155 } from "../hooks/useCollection";
 
 const providers: any = {
-  'ethereum': new JsonRpcProvider('https://eth-mainnet.g.alchemy.com/v2/2eEiw8W63XB1bzIk-2XJHxPbZreVtM8V'),
-  'base': new JsonRpcProvider('https://mainnet.base.org'),
-  'lukso-testnet': new JsonRpcProvider('https://rpc.testnet.lukso.network')
+  ethereum: new JsonRpcProvider(
+    "https://eth-mainnet.g.alchemy.com/v2/2eEiw8W63XB1bzIk-2XJHxPbZreVtM8V",
+  ),
+  base: new JsonRpcProvider("https://mainnet.base.org"),
+  "lukso-testnet": new JsonRpcProvider("https://rpc.testnet.lukso.network"),
 };
 
 type CollectionMeta = {
-  chain: string,
-  address: string,
-  standard: string,
-  enumerable: boolean
-}
+  chain: string;
+  address: string;
+  standard: string;
+  enumerable: boolean;
+  interface: any;
+};
 
-export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSize: number, callback: any, onToken: (token: any) => void) => {
-  const contract = new Contract(meta.address, meta.standard === 'ERC721' ? ERC721 : ERC1155, providers[meta.chain]);
+export const fetchTokens = async (
+  meta: CollectionMeta,
+  startAt: number,
+  pageSize: number,
+  callback: any,
+  onToken: (token: any) => void,
+) => {
+  const contract = new Contract(
+    meta.address,
+    meta.standard === "ERC721" ? ERC721 : ERC1155,
+    providers[meta.chain],
+  );
+
+  meta.chain === "lukso" && console.log(meta);
 
   let _count = 0,
     tokenId = startAt;
@@ -29,7 +44,7 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
   let failedAttempts = 0;
   // const totalSupply = await collection.contract.totalSupply();
 
-  console.debug('fetching', contract.target, startAt, pageSize);
+  console.debug("fetching", contract.target, startAt, pageSize);
 
   while (_count < pageSize) {
     if (failedAttempts == 10) {
@@ -42,12 +57,11 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
 
       if (meta.enumerable) {
         _tokenId = Number(await contract.tokenByIndex(tokenId));
-        tokenUri = await contract.tokenURI(_tokenId)
-      }
-      else if (meta.standard !== 'ERC721') {
-        tokenUri = await contract.uri(tokenId)
+        tokenUri = await contract.tokenURI(_tokenId);
+      } else if (meta.standard !== "ERC721") {
+        tokenUri = await contract.uri(tokenId);
       } else {
-        tokenUri = await contract.tokenURI(tokenId)
+        tokenUri = await contract.tokenURI(tokenId);
       }
 
       onToken({
@@ -55,7 +69,7 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
         address: contract.target as string,
         metadata: tokenUri,
         collection: await name,
-        chain: meta.chain
+        chain: meta.chain,
       });
 
       tokens.push({
@@ -63,7 +77,7 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
         address: contract.target as string,
         metadata: tokenUri,
         collection: await name,
-        chain: meta.chain
+        chain: meta.chain,
       });
 
       _count++;
@@ -78,9 +92,7 @@ export const fetchTokens = async (meta: CollectionMeta, startAt: number, pageSiz
 
   if (failedAttempts === 10) {
     callback({ data: tokens, cursor: tokenId, failed: true });
-    
-  }
-  else {
+  } else {
     callback({ data: tokens, cursor: tokenId });
   }
 

@@ -3,118 +3,30 @@ import { Contract } from "ethers";
 import { ERC721, providers } from "./hooks/useCollection";
 
 const collections = [
-  // {
-  //   chain: "ethereum",
-  //   address: "0x490339CFF5D89E6c83aB036E73A3aC9bf2e2e303",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-  // {
-  //   chain: "ethereum",
-  //   address: "0x12C1f820f49f56d1Ca5daf929E82181eB26A07f9",
-  //   standard: "ERC1155",
-  //   interface: ERC1155
-  // },
-  // {
-  //   chain: "ethereum",
-  //   address: "0x3582668EBf6fe56CF53104796Fa98a7e60F209bA",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0xc170384371494b2A8f6ba20F4d085c4DDe763d96",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  //   enumerable: true
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0x29F45fb845C374a8424a4E3017127621eCa69451",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0xd1169e5349d1cB9941F3DCbA135C8A4b9eACFDDE",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0xd07dc4262BCDbf85190C01c996b4C06a461d2430",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0x21Afa9aB02B6Fb7cb483ff3667c39eCdd6D9Ea73",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0xaB4d666C58CA992891ad9867D4fB74B34B84Ed05",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0x17CB1c13B666AE0A439547960CB61830707AC358",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // { video
-  //   chain: "ethereum",
-  //   address: "0x3B3ee1931Dc30C1957379FAc9aba94D1C48a5405",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0xE9A59a922d4Da45C485b3634dbE9C96AA31F7Ee1",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0x22a79E3859AAE4D0F7a24834E9d0F9247b7093cd",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "ethereum",
-  //   address: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
-
-  // {
-  //   chain: "base",
-  //   name: 'ERC1155',
-  //   address: "0xc541fC1Aa62384AB7994268883f80Ef92AAc6399",
-  //   standard: "ERC1155",
-  //   interface: ERC1155,
-  // },
-
-
-  // { standard
-  //   chain: "ethereum",
-  //   address: "0x8887cE34F6f1a4de4E8EB2A9195eEb261C413365",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  // },
+  {
+    chain: "lukso",
+    address: "0x8993b6dbfd57ed5d3b999a8bf430e7b89056a00b",
+    standard: "LSP8",
+    interface: ERC721,
+  },
+  {
+    chain: "lukso",
+    address: "0x86e817172b5c07f7036bf8aa46e2db9063743a83",
+    standard: "LSP8",
+    interface: ERC721,
+  },
+  {
+    chain: "lukso",
+    address: "0x5021e9ed50d8c71e3d74c0de7964342aaa1a0f62",
+    standard: "LSP8",
+    interface: ERC721,
+  },
+  {
+    chain: "lukso",
+    address: "0x74654920356257981f6b63a65ad72d4d9bc21929",
+    standard: "LSP8",
+    interface: ERC721,
+  },
 
   // all are working below this
   {
@@ -188,21 +100,14 @@ const collections = [
     address: "0xb932a70A57673d89f4acfFBE830E8ed7f75Fb9e0",
     standard: "ERC721",
     interface: ERC721,
-    enumerable: true
+    enumerable: true,
   },
-  // {
-  //   chain: "ethereum",
-  //   address: "0x4C6eaedA81197B948f635bDb2b3720805f5c7615",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  //   enumerable: true
-  // },
   {
     chain: "ethereum",
     address: "0xAb0c59978ba096db64BcDE2eb42A98cEb7eB7c0d",
     standard: "ERC721",
     interface: ERC721,
-    enumerable: true
+    enumerable: true,
   },
   {
     chain: "base",
@@ -210,13 +115,6 @@ const collections = [
     standard: "ERC721",
     interface: ERC721,
   },
-  // {
-  //   chain: "ethereum",
-  //   address: "0xa7d8d9ef8D8Ce8992Df33D8b8CF4Aebabd5bD270",
-  //   standard: "ERC721",
-  //   interface: ERC721,
-  //   enumerable: true
-  // },
   {
     chain: "ethereum",
     address: "0xf9c362cdd6eeba080dd87845e88512aa0a18c615",
@@ -246,7 +144,7 @@ const collections = [
   contract: new Contract(
     collection.address,
     collection.interface,
-    providers[collection.chain]
+    providers[collection.chain],
   ),
 }));
 

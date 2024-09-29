@@ -2,7 +2,7 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
   Route,
-  RouterProvider
+  RouterProvider,
 } from "react-router-dom";
 
 import Layout from "./pages/Layout";
@@ -20,38 +20,46 @@ import Boards from "./pages/profile/boards";
 import Assets from "./pages/profile/assets";
 import Universe from "./pages/profile/universe";
 
-const router = () => createBrowserRouter(
-  createRoutesFromElements(
-    <Route path="/" element={<Layout />}>
-      <Route path="/" element={<Explore />} />
-      <Route path='/collection/:chain/:collection/token/:tokenId' element={<Token />} />
-      <Route path='/collection/:chain/:address' element={<Collection />} />
-      <Route path='/profile/:address' element={<ProfilePage />}>
-        <Route index={true} path='/profile/:address' element={<Boards />}/>
-        <Route path='/profile/:address/assets' element={<Assets />}/>
-        <Route path='/profile/:address/universe' element={<Universe />}/>
-      </Route>
-      <Route path='/board/:boardId' element={<BoardPage />} />
-    </Route>
-  )
-);
+const router = () =>
+  createBrowserRouter(
+    createRoutesFromElements(
+      <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Explore />} />
+        <Route
+          path="/collection/:chain/:collection/token/:tokenId"
+          element={<Token />}
+        />
+        <Route path="/collection/:chain/:address" element={<Collection />} />
+        <Route path="/profile/:address" element={<ProfilePage />}>
+          <Route index={true} path="/profile/:address" element={<Boards />} />
+          <Route path="/profile/:address/assets" element={<Assets />} />
+          <Route path="/profile/:address/universe" element={<Universe />} />
+        </Route>
+        <Route path="/board/:boardId" element={<BoardPage />} />
+      </Route>,
+    ),
+  );
 
-export default function Router () {
+export default function Router() {
   const { loading, user } = useUser();
   const queryClient = useQueryClient();
   const { getBoards } = useBoards();
 
   useEffect(() => {
-    if (loading) { return; }
+    if (loading) {
+      return;
+    }
 
-    if (!user) { return; }
+    if (!user) {
+      return;
+    }
 
     queryClient.prefetchQuery({
-      queryKey: ['onchain:boards', user.uid],
+      queryKey: ["onchain:boards", user.uid],
       queryFn: () => getBoards(user.uid as string),
-      staleTime: 1 * 24 * 60 * 60
+      staleTime: 1 * 24 * 60 * 60,
     });
   }, [loading, user]);
 
-  return <RouterProvider router={router()} />
+  return <RouterProvider router={router()} />;
 }

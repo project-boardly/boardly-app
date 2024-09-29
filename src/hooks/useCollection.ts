@@ -16,7 +16,7 @@ export const providers: any = {
     "https://eth-mainnet.g.alchemy.com/v2/2eEiw8W63XB1bzIk-2XJHxPbZreVtM8V",
   ),
   base: new JsonRpcProvider("https://mainnet.base.org"),
-  "lukso-testnet": new JsonRpcProvider("https://rpc.testnet.lukso.network"),
+  lukso: new JsonRpcProvider("https://rpc.mainnet.lukso.network"),
 };
 
 export const ERC721 = abi;
@@ -35,6 +35,7 @@ export function useCollection(
   }
 
   if (standard === "LSP8") {
+    console.log(chain, address);
     return LSP8CollectionUtils(chain, address);
   }
 
@@ -47,12 +48,12 @@ export function useCollection(
     while (count < pageSize) {
       try {
         const tokenUri = await collection.tokenURI(tokenId);
-
-        console.log(tokenUri);
-
         tokens.push({
           id: tokenId,
-          metadata: tokenUri.replace("ipfs://", "https://ipfs.io/ipfs/"),
+          metadata: tokenUri.replace(
+            "ipfs://",
+            "https://boardly-ipfs-proxy.project-boardly.workers.dev/ipfs/",
+          ),
         });
         count++;
       } catch (error) {

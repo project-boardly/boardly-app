@@ -25,42 +25,46 @@ export function Collection() {
     });
   }
 
-  console.log(query.data?.pages.map((page) => page.data).flat());
-
   if (query.isLoading) {
-    return <Loader />
+    return <Loader />;
   }
 
   return (
     <div>
       <div className="mx-16">
-      { query.data && <Masonry
-          items={query.data.pages.map((p) => p.data).flat() as any[]}
-          columnGutter={8}
-          overscanBy={2}
-          maxColumnCount={5}
-          columnWidth={250}
-          render={({ data }: { data: any }) => {
-            return (
-              <NFTCard
-                chain={chain as string}
-                tokenId={data.id}
-                collection={address as string}
-                metadataUrl={data.metadata}
-                name={''}
-                addToMuseboard={() =>
-                  addToMuseboard({
-                    chain: chain as string,
-                    collection: address as string,
-                    tokenId: data.id,
-                  })
-                }
-              />
-            );
-          }}
-        /> }
+        {query.data && (
+          <Masonry
+            items={query.data.pages.map((p) => p.data).flat() as any[]}
+            columnGutter={8}
+            overscanBy={2}
+            maxColumnCount={5}
+            columnWidth={250}
+            render={({ data }: { data: any }) => {
+              return (
+                <NFTCard
+                  chain={chain as string}
+                  tokenId={data.id}
+                  collection={address as string}
+                  metadataUrl={data.metadata}
+                  name={""}
+                  addToMuseboard={() =>
+                    addToMuseboard({
+                      chain: chain as string,
+                      collection: address as string,
+                      tokenId: data.id,
+                    })
+                  }
+                />
+              );
+            }}
+          />
+        )}
       </div>
-      <div className="max-w-xs mx-auto flex align-middle justify-around"><Button variant="dark" onClick={() => query.fetchNextPage()}>Load More</Button></div>
+      <div className="max-w-xs mx-auto flex align-middle justify-around">
+        <Button variant="dark" onClick={() => query.fetchNextPage()}>
+          Load More
+        </Button>
+      </div>
     </div>
   );
 }

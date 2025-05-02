@@ -2,7 +2,7 @@ import { useContext } from "react";
 import LitNetworkContext from "../contexts/LitNetworkContext";
 
 export default function useLitNetwork() {
-  const { client, encrypt, decrypt } = useContext(LitNetworkContext);
+  const litCtx = useContext(LitNetworkContext);
 
-  return { client, encrypt, decrypt };
+  return litCtx;
 }

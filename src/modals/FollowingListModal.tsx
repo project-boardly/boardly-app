@@ -2,21 +2,9 @@ import { Fragment } from "react";
 import { Transition, Dialog } from "@headlessui/react";
 import NiceModal, { useModal } from "@ebay/nice-modal-react";
 import { Loader } from "./AddToMuseboard";
-import { useErc725 } from "../hooks/useErc725";
 import { useQuery } from "@tanstack/react-query";
-import type { ERC725JSONSchema } from "@erc725/erc725.js";
 import ProfilesList from "../common/ProfilesList";
 import useFollowSystem from "../hooks/useFollowSystem";
-
-const schema: ERC725JSONSchema[] = [
-  {
-    name: "FollowingProfiles[]",
-    key: "0xd62c218b4cee2c6cd2453415e67c5ffaa3220349ed84a836e45f1fc38c24f476",
-    keyType: "Array",
-    valueType: "address",
-    valueContent: "Address",
-  },
-];
 
 type FollowingListModalArgs = {
   address: string;

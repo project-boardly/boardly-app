@@ -54,61 +54,61 @@ type FetchTokensRes = {
   failed?: boolean;
 };
 
-async function fetchLuksoTokens(
-  address: string,
-  limit: number,
-  offset: number,
-) {
-  const query = `
-      query MyQuery {
-        Asset(
-          limit: 1
-          offset: 0
-          where: { id: { _eq: "${address}" } }
-        ) {
-          id
-          blockNumber
-          data
-          isCollection
-          isLSP7
-          isUnknown
-          lsp4TokenName
-          lsp4TokenSymbol
-          owner {
-            id
-          }
-          tokens(limit: ${limit}, offset: ${offset}, order_by: { tokenId: asc }) {
-            tokenId,
-            name,
-            images {
-              url
-            }
-          }
-        }
-      }
-    `;
+// async function fetchLuksoTokens(
+//   address: string,
+//   limit: number,
+//   offset: number,
+// ) {
+//   const query = `
+//       query MyQuery {
+//         Asset(
+//           limit: 1
+//           offset: 0
+//           where: { id: { _eq: "${address}" } }
+//         ) {
+//           id
+//           blockNumber
+//           data
+//           isCollection
+//           isLSP7
+//           isUnknown
+//           lsp4TokenName
+//           lsp4TokenSymbol
+//           owner {
+//             id
+//           }
+//           tokens(limit: ${limit}, offset: ${offset}, order_by: { tokenId: asc }) {
+//             tokenId,
+//             name,
+//             images {
+//               url
+//             }
+//           }
+//         }
+//       }
+//     `;
 
-  const res = await fetch("http://localhost:3000/graphql-proxy", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({ query: query }),
-  }).then((r) => r.json());
+//   const res = await fetch("http://localhost:3000/graphql-proxy", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Accept: "application/json",
+//     },
+//     body: JSON.stringify({ query: query }),
+//   }).then((r) => r.json());
 
-  const tokens = res.data.Asset[0].tokens;
+//   const tokens = res.data.Asset[0].tokens;
 
-  return tokens.map((t: any) => ({
-    address: address,
-    chain: "lukso",
-    id: t.tokenId,
-    metadata: {
-      name: t.name,
-      image: t.images[0].url,
-    },
-  }));
-}
+//   return tokens.map((t: any) => ({
+//     address: address,
+//     chain: "lukso",
+//     id: t.tokenId,
+//     metadata: {
+//       name: t.name,
+//       image: t.images[0].url,
+//     },
+//   }));
+// }
 
 export default function Explore() {
   const collectionsCount = 2;

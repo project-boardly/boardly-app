@@ -6,7 +6,7 @@ export const fetchTokens = async (chain: string, address: string, standard: stri
     new URL("./sw/worker", import.meta.url)
   );
 
-  const tokens = await worker.fetchTokens({ chain, address, standard, enumerable }, startAt, count, proxy(callback), proxy(onToken));
+  const tokens = await worker.fetchTokens({ chain, address, standard, enumerable, interface: {} }, startAt, count, proxy(callback), proxy(onToken));
 
   return tokens;
 }

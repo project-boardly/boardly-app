@@ -1,40 +1,6 @@
-import { useEffect, useState } from "react";
-
-import { Contract, getAddress, zeroPadValue } from "ethers";
 import { useTransactionSender } from "../hooks/transactions";
-
-import FollowModule from "./LSP26FollowerSystem.json";
-
-import KeyManagerSchema from "@erc725/erc725.js/schemas/LSP6KeyManager.json";
-import LSP17ExtensionSchema from "@erc725/erc725.js/schemas/LSP17ContractExtension.json";
-import { useErc725 } from "../hooks/useErc725";
-import type { ERC725JSONSchema } from "@erc725/erc725.js";
-import useUniversalProfile from "../hooks/useUniversalProfile";
-import { encodeValueType } from "@erc725/erc725.js/build/main/src/lib/encoder";
-import useConnectModule from "../hooks/useConnectModule";
 import { useQuery } from "@tanstack/react-query";
-import { getEncryptionWallet } from "../contexts/LitNetworkContext";
 import useFollowSystem from "../hooks/useFollowSystem";
-
-const _CONNECT_SYSTEM_ADDR = getAddress(import.meta.env.VITE_UP_CONNECT_SYSTEM);
-
-type ReadyToFollow = {
-  canFollow: boolean;
-  permissions: boolean;
-  startFollowingExtension: boolean;
-  stopFollowingExtension: boolean;
-  allowedDataKeys: boolean;
-};
-
-const _START_FOLLOWING_SELECTOR =
-  "0xcee78b4094da8601109600004d28340300000000000000000000000000000000";
-const _STOP_FOLLOWING_SELECTOR =
-  "0xcee78b4094da8601109600001aee210800000000000000000000000000000000";
-
-const _REQUIRED_DATA_KEYS = [
-  "0x8f3e89ce6b63dd5d2e740000",
-  "0xd62c218b4cee2c6cd2453415e67c5ffa",
-];
 
 export default function FollowAction({
   address,
@@ -43,7 +9,7 @@ export default function FollowAction({
   address: string;
   target: string;
 }) {
-  const { contract } = useUniversalProfile(address);
+  // const { contract } = useUniversalProfile(address);
   const { isFollowing, contract: followSystemContract } = useFollowSystem(import.meta.env.VITE_FOLLOW_SYSTEM_ADDR);
   const { sendTransaction } = useTransactionSender();
   const query = useQuery({

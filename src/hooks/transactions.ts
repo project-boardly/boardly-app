@@ -38,8 +38,8 @@ function parseTransactionError (error: any) {
   return new MuseboardError(parsedError.name);
 }
 
-export function useTransactionSender () {
-  const provider = new BrowserProvider(window.lukso);
+export function useTransactionSender (givenProvider?: BrowserProvider) {
+  const provider = givenProvider ? givenProvider : new BrowserProvider(window.lukso);
 
   async function sendTransaction (contract: Contract, functionName: string | FunctionFragment, args: unknown[]) {
     const signer = await provider.getSigner();

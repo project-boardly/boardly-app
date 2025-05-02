@@ -24,7 +24,7 @@ export default function useMuseboard() {
   const user = useContext(UserContext);
   const contract = useContract(import.meta.env.VITE_BOARDS_CONTRACT, abi);
   const { sendTransaction } = useTransactionSender();
-  const { encrypt, decrypt } = useLitNetwork();
+  const litHelper = useLitNetwork();
 
   async function getBoards(address: string) {
     const boardIds = await contract.tokenIdsOf(address);
@@ -68,11 +68,10 @@ export default function useMuseboard() {
       .then(async (data) => {
         if (data.private) {
           try {
-            const tokens = await decrypt(
+            const tokens = await litHelper?.decrypt(
               data.ciphertext,
               data.hash,
-              data.conditions,
-              user?.uid as string,
+              data.conditions
             );
 
             data.tokens = JSON.parse(tokens);
@@ -111,10 +110,9 @@ export default function useMuseboard() {
         ? getFollowerOnlyBoardConditions(user?.uid as string)
         : getPrivateBoardConditions(user?.uid as string);
 
-      const { ciphertext, hash } = await encrypt(
+      const { ciphertext, hash } = await litHelper?.encrypt(
         JSON.stringify(data.tokens || []),
-        conditions,
-        user?.uid as string,
+        conditions
       );
 
       tokensData.ciphertext = ciphertext;

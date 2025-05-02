@@ -1,31 +1,39 @@
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 
 import {
-  BrowserProvider,
   Mnemonic,
   Wallet,
+  getAddress,
+  isAddress,
   keccak256,
-  verifyMessage,
-  zeroPadValue,
+  verifyMessage
 } from "ethers";
 
 import {
   LitNodeClient,
-  encryptString,
-  decryptToString,
   uint8arrayToString,
   uint8arrayFromString,
 } from "@lit-protocol/lit-node-client";
 
+import { type AuthSig } from '@lit-protocol/types';
+
+import { encryptString, decryptToString } from '@lit-protocol/encryption';
+
 import { SiweMessage } from "siwe";
 
+import { LIT_NETWORK } from "@lit-protocol/constants";
+import { LuksoContext } from "../providers/LuksoProvider";
+import ERC725 from "@erc725/erc725.js";
+
+import UniversalProfileContract from "@lukso/universalprofile-contracts/artifacts/UniversalProfile.json";
+import { encodeFunctionData } from "viem";
+import { luksoTestnet } from "viem/chains";
+
 const client = new LitNodeClient({
-  litNetwork: "cayenne",
+  litNetwork: LIT_NETWORK.DatilDev
 });
 
 export function getFollowerOnlyBoardConditions(owner: string) {
-  const targetAddr = zeroPadValue(owner, 32);
-
   return [
     {
       contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
@@ -58,7 +66,7 @@ export function getFollowerOnlyBoardConditions(owner: string) {
             type: "bool",
           },
         ],
-        payable: false,
+        // payable: false,
         stateMutability: "view",
         type: "function",
       },
@@ -75,7 +83,6 @@ export function getFollowerOnlyBoardConditions(owner: string) {
     [
       {
         contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
-        standardContractType: "SIWE",
         functionName: "checkPermission",
         functionParams: [
           ":litParam:upAddress",
@@ -105,7 +112,7 @@ export function getFollowerOnlyBoardConditions(owner: string) {
               type: "bool",
             },
           ],
-          payable: false,
+          // payable: false,
           stateMutability: "view",
           type: "function",
         },
@@ -120,40 +127,35 @@ export function getFollowerOnlyBoardConditions(owner: string) {
         operator: "and",
       },
       {
-        contractAddress: "0xC79fb40EE0FCfdF0A4301d7CDA9A72F7921E4ECd",
-        standardContractType: "SIWE",
-        functionName: "isFollowingTarget",
+        contractAddress: "0xf01103E5a9909Fc0DBe8166dA7085e0285daDDcA",
+        functionName: "isFollowing",
         functionParams: [
-          "0xc194f5Edde2616D4BDA8d56b3B0Fd1F091d7eFEb",
-          targetAddr,
           ":litParam:upAddress",
+          owner
         ],
         functionAbi: {
-          constant: true,
           inputs: [
             {
-              name: "target",
-              type: "address",
-            },
-            {
-              name: "data",
-              type: "bytes32",
-            },
-            {
+              internalType: "address",
               name: "follower",
-              type: "address",
+              type: "address"
             },
+            {
+              internalType: "address",
+              name: "addr",
+              type: "address"
+            }
           ],
-          name: "isFollowingTarget",
+          name: "isFollowing",
           outputs: [
             {
+              internalType: "bool",
               name: "",
-              type: "bool",
-            },
+              type: "bool"
+            }
           ],
-          payable: false,
           stateMutability: "view",
-          type: "function",
+          type: "function"
         },
         chain: "luksoTestnet",
         returnValueTest: {
@@ -170,7 +172,7 @@ export function getPrivateBoardConditions(owner: string) {
   return [
     {
       contractAddress: "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
-      standardContractType: "SIWE",
+      // standardContractType: "SIWE",
       functionName: "checkPermission",
       functionParams: [
         owner,
@@ -200,7 +202,7 @@ export function getPrivateBoardConditions(owner: string) {
             type: "bool",
           },
         ],
-        payable: false,
+        // payable: false,
         stateMutability: "view",
         type: "function",
       },
@@ -234,59 +236,70 @@ function createLitSiweMessage(address: string, upAddress: string) {
   const message = new SiweMessage({
     domain,
     address,
-    statement: "Login to museboard",
+    statement: "Login to boardly",
     uri: origin + "/",
     nonce: "lWnXtPjsqVSuDOkmS",
     version: "1",
-    issuedAt: new Date(Date.parse("2023-11-26T10:13:51.151Z")).toISOString(),
-    chainId: 42,
+    issuedAt: new Date(Date.now()).toISOString(),
+    expirationTime: new Date(Date.now() + 60 * 10).toISOString(),
+    chainId: 4201,
     resources: [`litParam:upAddress:${encodedUpAddress}`],
   });
 
   return message.prepareMessage();
 }
 
-export async function getEncryptionWallet() {
-  let nonce = localStorage.getItem("encryption-nonce");
+export function useEncryptionWallet() {
+  const luksoContext = useContext(LuksoContext);
 
-  if (!nonce) {
-    const provider = new BrowserProvider(window.lukso);
-    const signer = await provider.getSigner();
-    const message = "Generate encryption keys";
+  return async () => {
+    if (!luksoContext || !luksoContext.clients.public || !luksoContext.clients.wallet) { return; }
 
-    const sign = await signer.signMessage(message);
-    nonce = keccak256(sign);
+    let nonce = localStorage.getItem("encryption-nonce");
 
-    localStorage.setItem("encryption-nonce", nonce);
-    localStorage.setItem(
-      "encryption-nonce-creator",
-      verifyMessage(message, sign),
-    );
-  }
+    const walletAddresses = await luksoContext.clients.wallet.getAddresses(),
+      nonceAccount = walletAddresses[0],
+      storedNonceAccount = localStorage.getItem('encryption-nonce-account');
 
-  const secret = Mnemonic.fromEntropy(nonce);
-  const wallet = Wallet.fromPhrase(secret.phrase);
+    if (!nonce || !isAddress(storedNonceAccount) || getAddress(storedNonceAccount) !== getAddress(nonceAccount)) {
+      const message = "Generate encryption keys";
 
-  return wallet;
+      let sign;
+
+      if (!(window as any).encKeySignReq) {
+        (window as any).encKeySignReq = luksoContext.clients.wallet.signMessage({
+          message: message,
+          account: walletAddresses[0]
+        });
+      }
+
+      sign = await (window as any).encKeySignReq;
+      nonce = keccak256(sign);
+
+      localStorage.setItem("encryption-nonce", nonce);
+      localStorage.setItem(
+        "encryption-nonce-creator",
+        verifyMessage(message, sign),
+      );
+      localStorage.setItem(
+        'encryption-nonce-account',
+        getAddress(nonceAccount)
+      );
+    }
+
+    const secret = Mnemonic.fromEntropy(nonce);
+    const wallet = Wallet.fromPhrase(secret.phrase);
+
+    return wallet;
+  };
 }
 
-async function getAuthSig(upAddress: string) {
-  const wallet = await getEncryptionWallet();
-  const siweMessage = createLitSiweMessage(wallet.address, upAddress);
-  const sig = await wallet.signMessage(siweMessage);
-
-  return constructAuthSig(sig, siweMessage, wallet.address);
-}
-
-async function encrypt(message: string, conditions: any[], upAddress: string) {
+async function encryptMessage(message: string, conditions: any[]) {
   await client.connect();
-  const authSig = await getAuthSig(upAddress);
 
   const { ciphertext, dataToEncryptHash } = await encryptString(
     {
       evmContractConditions: conditions,
-      authSig,
-      chain: "luksoTestnet",
       dataToEncrypt: message,
     },
     client,
@@ -295,22 +308,21 @@ async function encrypt(message: string, conditions: any[], upAddress: string) {
   return { ciphertext, hash: dataToEncryptHash };
 }
 
-async function decrypt(
+async function decryptString(
   ciphertext: string,
   dataHash: string,
   conditions: any[],
-  upAddress: string,
+  authSign: AuthSig
 ) {
   await client.connect();
-  const authSig = await getAuthSig(upAddress);
 
   const decryptedString = await decryptToString(
     {
       evmContractConditions: conditions,
       ciphertext,
       dataToEncryptHash: dataHash,
-      authSig,
-      chain: "luksoTestnet",
+      authSig: authSign,
+      chain: 'luksoTestnet'
     },
     client,
   );
@@ -318,9 +330,95 @@ async function decrypt(
   return decryptedString;
 }
 
-const LitNetworkContext = createContext({ client, encrypt, decrypt });
+type LitNetworkContextType = {
+  client: LitNodeClient,
+  encrypt: (message: string, conditions: any[]) => any,
+  decrypt: (ciphertext: string, hash: string, conditions: any[]) => any
+}
+
+const LitNetworkContext = createContext<LitNetworkContextType | undefined>(undefined);
 
 export function LitProvider({ children }: any) {
+  const getWallet = useEncryptionWallet();
+  const luksoContext = useContext(LuksoContext);
+
+  async function getAuthSig(upAddress: string) {
+    const wallet = await getWallet();
+
+    if (!wallet) { return; }
+
+    const siweMessage = createLitSiweMessage(wallet.address, upAddress);
+    const sig = await wallet.signMessage(siweMessage);
+
+    return constructAuthSig(sig, siweMessage, wallet.address);
+  }
+
+  async function validatePermissions() {
+    if (!luksoContext || !luksoContext.provider || !luksoContext.clients.public || !luksoContext.clients.wallet) {
+      console.log({ luksoContext, provider: luksoContext?.provider, public: luksoContext?.clients.public, walet: luksoContext?.clients.wallet });
+
+      return;
+    }
+
+    const wallet = await getWallet();
+
+    if (!wallet) {
+      console.log('Encryption Wallet Not Found');
+
+      return;
+    }
+
+    const permissionKeyName = ERC725.encodeKeyName("AddressPermissions:Permissions:<address>", [
+      wallet.address
+    ]);
+
+    let permission = await luksoContext.clients.public.readContract({
+      abi: UniversalProfileContract.abi,
+      address: luksoContext.account as `0x${string}`,
+      functionName: 'getData',
+      args: [permissionKeyName]
+    })
+
+    const permissions = permission === '0x' ? {} as Permissions : ERC725.decodePermissions(permission as string)
+    const requiredPermissions = ERC725.encodePermissions({ DECRYPT: true });
+
+    if (!(permissions as any).DECRYPT) {
+      const calldata = encodeFunctionData({
+        abi: UniversalProfileContract.abi,
+        functionName: 'setData',
+        args: [permissionKeyName, requiredPermissions]
+      })
+
+      await luksoContext.clients.wallet.writeContract({
+        address: luksoContext.account as `0x${string}`,
+        chain: luksoTestnet,
+        abi: UniversalProfileContract.abi,
+        account: luksoContext.account as `0x${string}`,
+        functionName: 'execute',
+        args: [0, luksoContext.account as `0x${string}`, 0, calldata]
+      });
+    } else {
+      console.log('permission already present');
+    }
+  }
+
+  async function encrypt(message: string, conditions: any[]) {
+    await getWallet();
+
+    await validatePermissions();
+    return encryptMessage(message, conditions)
+  }
+
+  async function decrypt(ciphertext: string, hash: string, conditions: any[]) {
+    const authSign = await getAuthSig(luksoContext?.account as string);
+
+    await validatePermissions();
+
+    if (!authSign) { return; }
+
+    return decryptString(ciphertext, hash, conditions, authSign);
+  }
+
   return (
     <LitNetworkContext.Provider value={{ client, encrypt, decrypt }}>
       {children}

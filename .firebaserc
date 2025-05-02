@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "muse-board"
-  }
+    "default": "boardly-alpha",
+    "alpha": "boardly-alpha"
+  },
+  "targets": {},
+  "etags": {}
 }

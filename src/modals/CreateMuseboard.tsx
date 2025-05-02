@@ -17,7 +17,7 @@ import useUser from "../hooks/useUser";
 import { Loader } from "./AddToMuseboard";
 import { getERC725 } from "../hooks/useErc725";
 import { ERC725JSONSchema } from "@erc725/erc725.js";
-import { getEncryptionWallet } from "../contexts/LitNetworkContext";
+import { useEncryptionWallet } from "../contexts/LitNetworkContext";
 import useUniversalProfile from "../hooks/useUniversalProfile";
 import useMuseboard from "../hooks/useMuseboard";
 
@@ -222,6 +222,7 @@ const MuseboardModal = NiceModal.create(() => {
   const { sendTransaction } = useTransactionSender();
   const [loading, setLoading] = useState({ status: 0, message: "Not Loading" });
   const [error, setError] = useState<string | null>(null);
+  const getEncryptionWallet = useEncryptionWallet();
   const { contract: upContract } = useUniversalProfile(
     modal.args?.authUser as string,
   );
@@ -260,6 +261,8 @@ const MuseboardModal = NiceModal.create(() => {
         setLoading({ status: 1, message: "Validating encryption keys" });
         const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
         const wallet = await getEncryptionWallet();
+
+        if (!wallet) { return; }
 
         const permissions = await erc.fetchData({
           keyName: "AddressPermissions:Permissions:<address>",
@@ -352,6 +355,8 @@ const MuseboardModal = NiceModal.create(() => {
       if (privateBoard) {
         const erc = getERC725(user.uid, LSP6KeyManager as ERC725JSONSchema[]);
         const wallet = await getEncryptionWallet();
+
+        if (!wallet) { return; }
 
         const permissions = await erc.fetchData({
           keyName: "AddressPermissions:Permissions:<address>",

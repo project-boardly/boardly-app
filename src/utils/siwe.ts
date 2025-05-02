@@ -11,11 +11,11 @@ export function createSiweMessage(address: string) {
   const message = new SiweMessage({
     domain,
     address,
-    statement: "Login to museboard",
+    statement: "Login to Boardly",
     uri: origin + "/",
     nonce: generateNonce(),
     version: "1",
-    chainId: 42,
+    chainId: 4201,
   });
 
   return message.prepareMessage();

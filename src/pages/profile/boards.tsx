@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   LockClosedIcon,
@@ -84,34 +84,34 @@ function MuseboardList({ address }: { address: string }) {
   );
 }
 
-function MuseboardContainer({ boardId }: { boardId: string }) {
-  const { getMetadata } = useBoards();
-  const query = useQuery({
-    queryKey: ["board:metadata", boardId],
-    queryFn: () => getMetadata(boardId as string),
-  });
-  const [image, setImage] = useState<string | null>(null);
+// function MuseboardContainer({ boardId }: { boardId: string }) {
+//   const { getMetadata } = useBoards();
+//   const query = useQuery({
+//     queryKey: ["board:metadata", boardId],
+//     queryFn: () => getMetadata(boardId as string),
+//   });
+//   const [image, setImage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!query.data) {
-      return;
-    }
+//   useEffect(() => {
+//     if (!query.data) {
+//       return;
+//     }
 
-    setImage(
-      create({
-        seed: `${query.data.owner}:${query.data.id}`,
-        scale: 40,
-        bgcolor: "#f1f1f1",
-      }).toDataURL(),
-    );
-  }, [query.data]);
+//     setImage(
+//       create({
+//         seed: `${query.data.owner}:${query.data.id}`,
+//         scale: 40,
+//         bgcolor: "#f1f1f1",
+//       }).toDataURL(),
+//     );
+//   }, [query.data]);
 
-  if (query.isLoading) {
-    return <p>Loading</p>;
-  }
+//   if (query.isLoading) {
+//     return <p>Loading</p>;
+//   }
 
-  return <Museboard board={Object.assign({ logo: image }, query.data)} />;
-}
+//   return <Museboard board={Object.assign({ logo: image }, query.data)} />;
+// }
 
 // function FollowingMuseboardList({ address }: { address: string }) {
 //   const { getFollowingList } = useFollowModule(

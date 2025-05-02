@@ -11,19 +11,17 @@ import { getFirestore } from "firebase/firestore";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-
 import {
   ApolloClient,
   InMemoryCache,
-  ApolloProvider,
-  gql,
+  ApolloProvider
 } from "@apollo/client";
 
 import App from "./App.tsx";
 import { UserProvider } from "./contexts/UserContext.tsx";
 
 import "./index.css";
+import LuksoProvider from "./providers/LuksoProvider.tsx";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -52,8 +50,10 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       <UserProvider>
         <QueryClientProvider client={queryClient}>
           <NiceModal.Provider>
-            <ReactQueryDevtools initialIsOpen={false} />
-            <App />
+            <LuksoProvider>
+              {/* <ReactQueryDevtools initialIsOpen={false} /> */}
+              <App />
+            </LuksoProvider>
             <Toaster position="bottom-center" />
           </NiceModal.Provider>
         </QueryClientProvider>

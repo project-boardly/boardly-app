@@ -116,7 +116,7 @@ const App: React.FC = () => {
       let x = 0,
         y = 0;
 
-      items.forEach((item, index) => {
+      items.forEach((item) => {
         ctx.fillStyle = item.color; // Use the pre-assigned color for moodboard aesthetics
         const itemWidth = item.width * scale;
         const itemHeight = item.height * scale;

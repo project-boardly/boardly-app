@@ -5,7 +5,7 @@ import safeGet from "lodash/get";
 import { NavLink, Outlet, useParams } from "react-router-dom";
 import { create } from "blockies-ts";
 import { useModal } from "@ebay/nice-modal-react";
-import { getAddress, zeroPadValue } from "ethers";
+import { getAddress } from "ethers";
 
 import FollowAction from "../../common/FollowAction";
 import { Address } from "../../common/components";
@@ -16,7 +16,7 @@ import useUser from "../../hooks/useUser";
 import useFollowSystem from "../../hooks/useFollowSystem";
 
 function ipfsUrl(url: string) {
-  return url.replace("ipfs://", "http://localhost:3000/ipfs/");
+  return url.replace("ipfs://", "https://boardly-ipfs-proxy.project-boardly.workers.dev/ipfs/");
 }
 
 function FollowInfo({ address }: { address: string }) {
@@ -73,7 +73,7 @@ export function ProfileCard({
   followersInfo?: boolean;
 }) {
   const { user, loading: authUserLoading } = useUser();
-  const { query, profile } = useProfileQuery(address);
+  const { profile } = useProfileQuery(address);
   const backgroundImage = ipfsUrl(
     safeGet(profile, "data.backgroundImages.0.url", ""),
   );

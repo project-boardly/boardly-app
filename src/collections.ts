@@ -9,12 +9,12 @@ const collections = [
     standard: "LSP8",
     interface: ERC721,
   },
-  {
-    chain: "lukso",
-    address: "0x86e817172b5c07f7036bf8aa46e2db9063743a83",
-    standard: "LSP8",
-    interface: ERC721,
-  },
+  // {
+  //   chain: "lukso",
+  //   address: "0x86e817172b5c07f7036bf8aa46e2db9063743a83",
+  //   standard: "LSP8",
+  //   interface: ERC721,
+  // },
   {
     chain: "lukso",
     address: "0x5021e9ed50d8c71e3d74c0de7964342aaa1a0f62",
@@ -22,30 +22,30 @@ const collections = [
     interface: ERC721,
   },
 
-  {
-    chain: "lukso",
-    address: "0x878b22245ee33456492e294fd265767c9a1b65e9",
-    standard: "LSP8",
-    interface: ERC721,
-  },
-  {
-    chain: "lukso",
-    address: "0x8993b6dbfd57ed5d3b999a8bf430e7b89056a00b",
-    standard: "LSP8",
-    interface: ERC721,
-  },
-  {
-    chain: "lukso",
-    address: "0x23ab529af53405e15932b1d0452a61a3fa908393",
-    standard: "LSP8",
-    interface: ERC721,
-  },
-  {
-    chain: "lukso",
-    address: "0x3983151e0442906000dab83c8b1cf3f2d2535f82",
-    standard: "LSP8",
-    interface: ERC721,
-  },
+  // {
+  //   chain: "lukso",
+  //   address: "0x878b22245ee33456492e294fd265767c9a1b65e9",
+  //   standard: "LSP8",
+  //   interface: ERC721,
+  // },
+  // {
+  //   chain: "lukso",
+  //   address: "0x8993b6dbfd57ed5d3b999a8bf430e7b89056a00b",
+  //   standard: "LSP8",
+  //   interface: ERC721,
+  // },
+  // {
+  //   chain: "lukso",
+  //   address: "0x23ab529af53405e15932b1d0452a61a3fa908393",
+  //   standard: "LSP8",
+  //   interface: ERC721,
+  // },
+  // {
+  //   chain: "lukso",
+  //   address: "0x3983151e0442906000dab83c8b1cf3f2d2535f82",
+  //   standard: "LSP8",
+  //   interface: ERC721,
+  // },
 
   // // all are working below this
   // {

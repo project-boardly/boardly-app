@@ -111,8 +111,8 @@ async function fetchLuksoTokens(
 }
 
 export default function Explore() {
-  const collectionsCount = 3;
-  const tokenPerCollection = 5;
+  const collectionsCount = 2;
+  const tokenPerCollection = 10;
   const modal = useModal("add-to-museboard");
   // const pageSize = collectionsCount * tokenPerCollection;
   const [loadAfter, setLoadAfter] = useState(Date.now() + 10 * 1000);
@@ -234,7 +234,7 @@ export default function Explore() {
           items={tokensList}
           columnGutter={8}
           overscanBy={2}
-          maxColumnCount={5}
+          maxColumnCount={7}
           columnWidth={250}
           onRender={maybeLoadMore}
           render={({ data }: { data: any }) => {

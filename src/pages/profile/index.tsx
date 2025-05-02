@@ -21,7 +21,7 @@ function ipfsUrl(url: string) {
 
 function FollowInfo({ address }: { address: string }) {
   const { getFollowersCount, getFollowingCount } = useFollowSystem(
-    import.meta.env.VITE_FOLLOW_SYSTEM_ADDR
+    import.meta.env.VITE_FOLLOW_SYSTEM_ADDR,
   );
   const [stats, setStats] = useState({
     following: 0,
@@ -31,15 +31,14 @@ function FollowInfo({ address }: { address: string }) {
   const followersModal = useModal("list-followers");
 
   useEffect(() => {
-    Promise.all([
-      getFollowersCount(address),
-      getFollowingCount(address)
-    ]).then(([followers, following]) => {
-      setStats({
-        followers,
-        following
-      });
-    });
+    Promise.all([getFollowersCount(address), getFollowingCount(address)]).then(
+      ([followers, following]) => {
+        setStats({
+          followers,
+          following,
+        });
+      },
+    );
   }, []);
 
   return (
@@ -74,12 +73,12 @@ export function ProfileCard({
   followersInfo?: boolean;
 }) {
   const { user, loading: authUserLoading } = useUser();
-  const { query } = useProfileQuery(address);
+  const { query, profile } = useProfileQuery(address);
   const backgroundImage = ipfsUrl(
-    safeGet(query, "data.backgroundImage.0.url", "")
+    safeGet(profile, "data.backgroundImages.0.url", ""),
   );
 
-  if (query.isLoading) {
+  if (profile.loading) {
     return (
       <div className="max-w-7xl mx-auto bg-cover bg-center shadow-2xl rounded-xl overflow-hidden">
         <div className="backdrop-blur-md bg-black/50">
@@ -100,9 +99,9 @@ export function ProfileCard({
     );
   }
 
-  if (!query.data) {
-    return <p>This address is not a universal profile</p>;
-  }
+  // if (!query.data) {
+  //   return <p>This address is not a universal profile</p>;
+  // }
 
   return (
     <div
@@ -111,33 +110,61 @@ export function ProfileCard({
     >
       <div className="backdrop-blur-md bg-black/50 px-16">
         <div className="max-w-sm mx-auto py-10 text-white">
-          <div className="flex lg:flex-row sm:flex-col">
+          <div className="flex lg:flex-row sm:flex-col my-4">
             <div className="flex-none w-50 float-right">
               <img
                 className="w-20 rounded-full sm:mx-auto"
                 src={ipfsUrl(
                   safeGet(
-                    query,
-                    "data.profileImage.0.url",
-                    create({ seed: address }).toDataURL()
-                  )
+                    profile,
+                    "data.profileImages.0.url",
+                    create({ seed: address }).toDataURL(),
+                  ),
                 )}
               />
             </div>
             <div className="grow">
               <div className="px-4">
-                <h2 className="text-3xl font-extrabold">{query.data.name}</h2>
+                <h2 className="text-3xl font-extrabold">{profile.data.name}</h2>
                 <Address address={address} className="" />
                 {followersInfo && <FollowInfo address={address} />}
               </div>
             </div>
           </div>
+          <div className="flex flex-wrap gap-2">
+            {profile.data.tags ? (
+              profile.data.tags.map((tag: string, index: number) => (
+                <span
+                  key={index}
+                  className="bg-gray-200 bg-opacity-50 text-black font-medium py-1 px-3 rounded-full"
+                >
+                  {tag}
+                </span>
+              ))
+            ) : (
+              <span className="text-gray-400 italic">No tags available</span>
+            )}
+          </div>
           <div className="py-4">
-            <p className="">{query.data.description}</p>
+            <p className="">{profile.data.description}</p>
           </div>
           {!authUserLoading && user && user.uid !== address && (
             <FollowAction address={getAddress(user.uid)} target={address} />
           )}
+          <div className="flex flex-wrap gap-2">
+            {profile.data.links.map(
+              (link: { title: string; url: string }, index: number) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  className="text-white border-2 border-white hover:bg-white hover:shadow-xl hover:text-black transition font-bold py-2 px-4 rounded-xl"
+                >
+                  {link.title}
+                </a>
+              ),
+            )}
+          </div>
         </div>
       </div>
     </div>

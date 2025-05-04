@@ -1,0 +1,233 @@
+{
+  "title": "Reflections on Creativity",
+  "sections": [
+    {
+      "encrypted": false,
+      "content": {
+        "data": {
+          "type": "doc",
+          "content": [
+            {
+              "type": "heading",
+              "attrs": {
+                "textAlign": null,
+                "level": 1
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "marks": [
+                    {
+                      "type": "bold"
+                    }
+                  ],
+                  "text": "Public Viewers"
+                }
+              ]
+            },
+            {
+              "type": "paragraph",
+              "attrs": {
+                "textAlign": null
+              },
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Creativity is a universal language that transcends boundaries. Whether you're painting, coding, or simply problem-solving, it's a powerful force that drives innovation and expression. Everyone has a spark of creativity—nurture it, and it will grow."
+                }
+              ]
+            }
+          ]
+        },
+        "private": false,
+        "followersOnly": false
+      }
+    },
+    {
+      "encrypted": true,
+      "conditions": [
+        {
+          "contractAddress": "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
+          "functionName": "checkPermission",
+          "functionParams": [
+            "0x4470c4cbbfe370323b92c5c234157fd69a0658ed",
+            ":userAddress",
+            "0x0000000000000000000000000000000000000000000000000000000000100000"
+          ],
+          "functionAbi": {
+            "constant": true,
+            "inputs": [
+              {
+                "name": "up",
+                "type": "address"
+              },
+              {
+                "name": "actor",
+                "type": "address"
+              },
+              {
+                "name": "permissions",
+                "type": "bytes32"
+              }
+            ],
+            "name": "checkPermission",
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+          },
+          "chain": "luksoTestnet",
+          "returnValueTest": {
+            "key": "",
+            "comparator": "=",
+            "value": "true"
+          }
+        }
+      ],
+      "content": {
+        "ciphertext": "sAUWx6PKc47o30/RDjp4QnzBZ5sC56acH9rgf2SqJ81lJGWpYLdvr1jvK1dxxKPRkexKFXuUMQ+1u0x3SdJ3nwQi1kJWbd6zxo7YoUWO8OmIBFMPclww7JMpORztaqXdXEPpxupC/mcCBFkqerPS+yTj2nJQ0nQjRxlnMwyOWHCz092TkAv21pQM9PnlEyHjU1ar2IQEIDpa6FhrvHI6kmM8NW/s7ijdzRvW5WI8gq4/6NV5dNt0652guULtrL66R0yObEw34AkdjjvdZvbWJoY7kMULFivAyH27ntyxw/k39XShWVAvrORllOkz0fY/E2ZQe4dUoi7YJUrsblfxcBSmLjReuQBxTfxTKZ2RVF2gi+65wDjPhFPU3Mug08Jo5nKynD8GGTRFJRARD4P7dhPoGc2omtxQY5BgkpURib6Jq6AOLyXsPrmsqLG7jupDYH2K67eP5ON3CaGF4T+UvlaHWOGPZ4hPtJv17DYFL9Ip4/cT2CZ7optXiRkWBf473cpUQUcXgLmbRvBTV68tEs99w3tqgu/DTeQ7EOBOSWL2Ms5mIXlebwOFItEtAdIKDxWm4i1PPY+P6+DpXrdBLlxwTADghKUIGzbHTLiK/qE+MV3WmsuY0Bzm73L6A1z648H0gt0KTHNT/38pJxOauKqh2E4QHs4RIKFdlbCxIB9dHHmTk0DtxvYwegvZB+YMDg+KBkTN3uXVU91Dp5Statkddy1A2smHBkDnvMYOE1ccS1PsHIozxyZ39duDMSmRxxsd6YnueSl/f55ii7v+LVAO6Iaa7094FwMC",
+        "hash": "a99e86d0aacf10bd4560382c92b3eb389fb1295b031a886f2b73f9ed17b2e3a9"
+      }
+    },
+    {
+      "encrypted": true,
+      "conditions": [
+        {
+          "contractAddress": "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
+          "functionName": "checkPermission",
+          "functionParams": [
+            "0x4470c4cbbfe370323b92c5c234157fd69a0658ed",
+            ":userAddress",
+            "0x0000000000000000000000000000000000000000000000000000000000100000"
+          ],
+          "functionAbi": {
+            "constant": true,
+            "inputs": [
+              {
+                "name": "up",
+                "type": "address"
+              },
+              {
+                "name": "actor",
+                "type": "address"
+              },
+              {
+                "name": "permissions",
+                "type": "bytes32"
+              }
+            ],
+            "name": "checkPermission",
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "stateMutability": "view",
+            "type": "function"
+          },
+          "chain": "luksoTestnet",
+          "returnValueTest": {
+            "key": "",
+            "comparator": "=",
+            "value": "true"
+          }
+        },
+        {
+          "operator": "or"
+        },
+        [
+          {
+            "contractAddress": "0x1C2cB0d53251FC7C438E91D899Ea6E00A4b5620B",
+            "functionName": "checkPermission",
+            "functionParams": [
+              ":litParam:upAddress",
+              ":userAddress",
+              "0x0000000000000000000000000000000000000000000000000000000000100000"
+            ],
+            "functionAbi": {
+              "constant": true,
+              "inputs": [
+                {
+                  "name": "up",
+                  "type": "address"
+                },
+                {
+                  "name": "actor",
+                  "type": "address"
+                },
+                {
+                  "name": "permissions",
+                  "type": "bytes32"
+                }
+              ],
+              "name": "checkPermission",
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            "chain": "luksoTestnet",
+            "returnValueTest": {
+              "key": "",
+              "comparator": "=",
+              "value": "true"
+            }
+          },
+          {
+            "operator": "and"
+          },
+          {
+            "contractAddress": "0xf01103E5a9909Fc0DBe8166dA7085e0285daDDcA",
+            "functionName": "isFollowing",
+            "functionParams": [
+              ":litParam:upAddress",
+              "0x4470c4cbbfe370323b92c5c234157fd69a0658ed"
+            ],
+            "functionAbi": {
+              "constant": true,
+              "inputs": [
+                {
+                  "name": "follower",
+                  "type": "address"
+                },
+                {
+                  "name": "addr",
+                  "type": "address"
+                }
+              ],
+              "name": "isFollowing",
+              "outputs": [
+                {
+                  "name": "",
+                  "type": "bool"
+                }
+              ],
+              "stateMutability": "view",
+              "type": "function"
+            },
+            "chain": "luksoTestnet",
+            "returnValueTest": {
+              "key": "",
+              "comparator": "=",
+              "value": "true"
+            }
+          }
+        ]
+      ],
+      "content": {
+        "ciphertext": "sGlKsbwqwrZIfkjgzh+paDP4rG2K6Lu48pho+idoM5TSAN67nQgW4iyPJDnNsfttv86Qy4U0lB+D+tbWHn4HKbpp1hd09PpPk/VkXKwHaVmPBDUrGc++VUFNAh5dUcVhp9hVRL5yrYZEbXgAQeCZD5U7Daqi1n2EtPxzoaGGIV3fDB7rLXyij1OeB0oiavG3INDEvQmmHYvgBzb7VQ5ep45liz+plEJnZEOg0/Tof8yQAXg7m/Yqjmng7iToK17b90cKM8BNmaZXTVmNl6x/bSgqPVg8Ik8bl+yU5TDcoW0RVseeYIhgRAru/E2Ny8gkn+SKTgDBGIxaeHe0DwoFN7JYs7wSCjcn5wRaOJ2yJ6g5WjYhP+5Ck+ik9/TPLUKNOyVqAExBLC9waJJtlntAzVPqRmFT6bYgBbyqXFl5uInEdd2ERk+xA2rTUuwpt0puBwTaiCFD2FCqjJy7kfDJdUjf68Vx5mWr5Rz+p/mlviC1mF0FOUKYNKE8+o5EsneMXTppkqPbMN/28Zs6hpobvQi1MZB3wL8txzpe3GvoHHsGEoDxUaRWEnfBE/xki7ZSbPEwgLF/0CGl0NEGSYnvbJTtDDwODabsAKEdGJ61rntF+mLDKXUkUym+sMhjvSqT2/riFiz3/fZo6FhvoYxdg8mgWl1v4Lp4DhW+6VsT4nrrszyfwm1zLIZjGGfRkuHKvQnnXDWt6OZQJlDXws93Zm9Jo/xjOuRxrYqOBWeHHqSDU6M5HSc5I2Z6/CBjzVpM4BRcfDQaDmhPm+S48r+C0NQ3DyEVXjF7rGn1uCj8tExcAg==",
+        "hash": "0dbafde63e8cf29d749758584066363369230d7eb3da7d1d2b70d04ac9d73cd4"
+      }
+    }
+  ],
+  "createdAt": 1746540571062
+}

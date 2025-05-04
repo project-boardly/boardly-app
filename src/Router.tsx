@@ -45,7 +45,11 @@ const router = () =>
           </Route>
           <Route path="/board/:boardId" element={<BoardPage />} />
         </Route> */}
+        <Route path="/add/:target" element={<AddToGrid />} />
         <Route path="/create" element={<CreateSomething />} />
+        <Route path="/manage/:address" element={<ManagePermission />} />
+        <Route path="/user/:address" element={<IndexMiniApp />} />
+        <Route path="/user/:address/view/:id" element={<Widget />} />
       </Route>
     ),
   );

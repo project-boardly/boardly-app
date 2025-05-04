@@ -30,6 +30,10 @@ export default defineConfig({
   ],
   server: {
     port: 5172,
+    https: {
+      key: readFileSync('/home/shashank/localhost-key.pem'),
+      cert: readFileSync('/home/shashank/localhost.pem')
+    }
   },
   worker: {
     plugins: [comlink()]

@@ -8,9 +8,9 @@ import { BrowserProvider } from 'ethers';
 import toast from 'react-hot-toast';
 
 export function ShortAddress ({ address }: { address: string }) {
-  return <a className="cursor-pointer inline" onClick={() => navigator.clipboard.writeText(address)}>
+  return <p className="cursor-pointer inline">
     {address.slice(0,5)}...{address.slice(address.length - 3)}
-  </a>
+  </p>
 }
 
 type QueryResultViewType = { query: UseQueryResult, element: (data: any) => JSX.Element | JSX.Element[]};
